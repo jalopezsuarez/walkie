@@ -137,7 +137,7 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 }
 .iconbtn:active { background: var(--surface-2); }
 .iconbtn svg { width: 1.25rem; height: 1.25rem; }
-.settings-btn svg { width: 1.7rem; height: 1.7rem; }
+.settings-btn svg { width: 2rem; height: 2rem; }
 
 /* remove-contact: gray filled circle (like the header avatar) with a "no" mark */
 .block-btn {
