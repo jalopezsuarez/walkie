@@ -56,7 +56,6 @@ return [
         'session'      => 60 * 60 * 24 * 30, // 30 days
         'pairing'      => 60,         // 1 minute (QR rotates for security)
         'audio_msg'    => 60 * 60,        // 1 hour
-        'image_msg'    => 60 * 60,        // 1 hour (photos / stickers / Memoji)
         'text_msg'     => 60 * 60 * 24,   // 24 hours
     ],
 
@@ -74,6 +73,5 @@ return [
     'upload' => [
         'max_text_len'   => 4000,          // characters
         'max_audio_bytes'=> 2 * 1024 * 1024, // 2 MB per voice note
-        'max_image_bytes'=> 2 * 1024 * 1024, // 2 MB per image/sticker
     ],
 ];

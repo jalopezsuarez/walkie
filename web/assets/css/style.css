@@ -252,14 +252,6 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .bubble.emoji-only.e4 .btext { font-size: 1.45rem; }
 .bubble.emoji-only .time { color: var(--ink-3); }
 
-/* image / sticker bubble */
-.bubble.image { background: transparent !important; box-shadow: none; padding: .1rem; cursor: pointer; }
-.img-msg { display: block; max-width: min(62vw, 17rem); max-height: 44vh; width: auto; height: auto; border-radius: .9rem; }
-.bubble.image .time { text-align: right; margin-top: .15rem; }
-.img-full { max-width: 94vw; max-height: 82vh; border-radius: .5rem; }
-.attach { color: var(--accent); }
-.attach svg { width: 1.5rem; height: 1.5rem; }
-
 /* audio bubble */
 .audio-msg { display: flex; align-items: center; gap: .6rem; min-width: 11rem; padding: .15rem .4rem .15rem 0; }
 .audio-play {
@@ -275,6 +267,7 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 
 /* composer */
 .composer {
+    flex: none;                 /* pinned at the bottom of the chat */
     border-top: 1px solid rgba(255,255,255,.5);
     background: rgba(255,255,255,.68);
     -webkit-backdrop-filter: saturate(150%) blur(14px);
@@ -282,6 +275,7 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
     padding: .55rem .6rem calc(.55rem + env(safe-area-inset-bottom));
     display: flex; align-items: center; gap: .55rem;
 }
+.preview { flex: none; }
 .composer .input { border-radius: 999px; background: rgba(255,255,255,.85); border-color: transparent; }
 .ptt {
     flex: none;

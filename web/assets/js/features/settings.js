@@ -69,7 +69,7 @@
                 saveBtn,
                 el('div', { class: 'section-title', text: 'Sesión' }),
                 el('button', { class: 'btn danger block', text: 'Cerrar sesión', onclick: W.auth.logout }),
-                el('p', { class: 'muted', style: 'margin-top:1.2rem', text: 'Los audios e imágenes se guardan 1 h y los textos 24 h. Al leerse se borran del servidor.' })
+                el('p', { class: 'muted', style: 'margin-top:1.2rem', text: 'Los audios se guardan 1 h y los textos 24 h. Al leerse se borran del servidor.' })
             ])
         ]));
     }

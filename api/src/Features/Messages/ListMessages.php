@@ -42,11 +42,13 @@ final class ListMessages
             if ($plain === null) {
                 continue; // tampered/corrupt — skip
             }
-            $typeName = ['a' => 'audio', 'i' => 'image', 't' => 'text'][$r['type']] ?? 'text';
+            if ($r['type'] !== 'a' && $r['type'] !== 't') {
+                continue; // only text and audio are supported
+            }
             $item = [
                 'id'         => (int) $r['id'],
                 'mine'       => (int) $r['sender_id'] === $user['id'],
-                'type'       => $typeName,
+                'type'       => $r['type'] === 'a' ? 'audio' : 'text',
                 'read'       => $r['read_at'] !== null,
                 'created_at' => gmdate('c', strtotime($r['created_at'] . ' UTC')),
                 'expires_at' => gmdate('c', strtotime($r['expires_at'] . ' UTC')),
@@ -55,9 +57,6 @@ final class ListMessages
                 $item['audio']       = base64_encode($plain);
                 $item['mime']        = $r['mime'] ?: 'audio/webm';
                 $item['duration_ms'] = $r['duration_ms'] !== null ? (int) $r['duration_ms'] : null;
-            } elseif ($r['type'] === 'i') {
-                $item['image'] = base64_encode($plain);
-                $item['mime']  = $r['mime'] ?: 'image/png';
             } else {
                 $item['text'] = $plain;
             }
