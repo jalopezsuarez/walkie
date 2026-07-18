@@ -86,7 +86,7 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .btn[disabled] { opacity: .5; cursor: default; }
 .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
 .btn.subtle { background: var(--surface-2); color: var(--ink); }
-.btn.danger { background: transparent; color: var(--danger); border: 1px solid #f0d4cf; }
+.btn.danger { background: transparent; color: var(--danger); border: 2px solid var(--danger); }
 .btn.block { width: 100%; }
 
 .input {
