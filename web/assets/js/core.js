@@ -117,4 +117,12 @@
         openOverlay: openOverlay, closeOverlay: closeOverlay, confirmDialog: confirmDialog,
         ICON: ICON
     };
+
+    /* Block pinch / gesture zoom (app-like). Vertical scrolling still works. */
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
+        document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
+    });
+    document.addEventListener('touchmove', function (e) {
+        if (e.touches && e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
 })();
