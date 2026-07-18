@@ -330,9 +330,14 @@
 
     function stopCurrent() {
         if (!current) return;
-        current.audio.pause();
-        current.btn.innerHTML = W.ICON.play;
+        current.audio.pause();   // 'pause' event resets its button icon
         current = null;
+    }
+
+    function b64ToBlob(b64, mime) {
+        var bin = atob(b64), len = bin.length, bytes = new Uint8Array(len);
+        for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+        return new Blob([bytes], { type: mime });
     }
 
     function fmtDur(ms) {
@@ -341,13 +346,21 @@
     }
 
     function buildAudio(node, m) {
-        var audio = new Audio('data:' + (m.mime || 'audio/webm') + ';base64,' + m.audio);
-        audio.preload = 'metadata';
+        // A blob URL plays far more reliably than a big data: URL (the first
+        // tap was silent on mobile with data: URLs).
+        var src;
+        try { src = URL.createObjectURL(b64ToBlob(m.audio, m.mime || 'audio/webm')); }
+        catch (e) { src = 'data:' + (m.mime || 'audio/webm') + ';base64,' + m.audio; }
+        var audio = new Audio(src);
+        audio.preload = 'auto';
         var btn = el('button', { class: 'audio-play', html: W.ICON.play });
         var fill = el('div', { class: 'audio-fill' });
         var dur = el('span', { class: 'audio-dur', text: fmtDur(m.duration_ms) });
         var body = el('div', { class: 'audio-body' }, [el('div', { class: 'audio-bar' }, [fill]), dur]);
 
+        // Button icon follows the real playback state.
+        audio.addEventListener('play', function () { btn.innerHTML = W.ICON.pause; });
+        audio.addEventListener('pause', function () { btn.innerHTML = W.ICON.play; });
         audio.addEventListener('timeupdate', function () {
             var t = audio.duration && isFinite(audio.duration) ? audio.duration : (m.duration_ms || 0) / 1000;
             if (t > 0) {
@@ -356,7 +369,6 @@
             }
         });
         audio.addEventListener('ended', function () {
-            btn.innerHTML = W.ICON.play;
             fill.style.width = '0%';
             dur.textContent = fmtDur(m.duration_ms);
             if (current && current.audio === audio) current = null;
@@ -366,17 +378,14 @@
             audio.addEventListener('play', function () { markRead(m.id); });
         }
 
-        // Tapping anywhere on the bubble toggles this note; starting one stops others.
+        // Tap anywhere on the bubble to toggle; starting one stops any other.
         node.addEventListener('click', function () {
             if (node._suppressClick) { node._suppressClick = false; return; } // long-press just fired
-            if (current && current.audio === audio) {
-                stopCurrent();
-            } else {
-                stopCurrent();
-                audio.play().catch(function () { W.toast('No se pudo reproducir'); });
-                btn.innerHTML = W.ICON.pause;
-                current = { audio: audio, btn: btn, fill: fill };
-            }
+            if (!audio.paused) { audio.pause(); return; }
+            stopCurrent();
+            current = { audio: audio, btn: btn, fill: fill };
+            var p = audio.play();
+            if (p && p.catch) p.catch(function () { W.toast('No se pudo reproducir'); });
         });
 
         node.appendChild(el('div', { class: 'audio-msg' }, [btn, body]));
