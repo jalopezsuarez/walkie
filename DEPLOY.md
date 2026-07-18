@@ -1,0 +1,90 @@
+# Deploying Walkie to InfinityFree
+
+Target host: **walkie.howto.rocks** — document root `htdocs/`.
+
+The final layout inside `htdocs/` must be:
+
+```
+htdocs/
+├── index.php        # blank root page
+├── api/             # backend
+└── web/             # frontend
+```
+
+## 1. Database
+
+In the InfinityFree control panel (MySQL Databases) you already have:
+
+| Field | Value |
+|---|---|
+| Host | `sql312.infinityfree.com` |
+| Port | `3306` |
+| Database | `if0_42263887_walkie` |
+| User | `if0_42263887` |
+| Password | *(your MySQL password)* |
+
+Open **phpMyAdmin** for that database and **import** `api/migrations/schema.sql`.
+
+## 2. Backend config
+
+Copy the sample and fill it in **on the server** (never commit real secrets):
+
+```bash
+cp api/config/config.sample.php api/config/config.php
+```
+
+Edit `api/config/config.php`:
+
+- `db.pass` → your MySQL password.
+- `app.key` → a fresh 32-byte base64 key. Generate one:
+  ```bash
+  php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
+  ```
+- `app.debug` → **`false`**.
+- `mail.log_only` → `false` (set to `true` only if the host can't send email;
+  codes then land in `api/storage/mail.log`).
+
+`app.url` / `app.web_origin` are already set to the production URLs.
+
+## 3. Frontend config
+
+`web/config.php` already points `api_base` at `https://walkie.howto.rocks/api`.
+Change it only if you host the API elsewhere.
+
+## 4. Upload
+
+Upload via FTP (host `ftpupload.net`, your account `if0_42263887`) or the online
+file manager, preserving the structure above. Make sure the `.htaccess` files in
+`api/` and `web/` are uploaded (they are hidden by default in some clients).
+
+Directory permissions: `api/storage/` must be writable if `mail.log_only` is on.
+
+## 5. Verify
+
+- `https://walkie.howto.rocks/` → blank page (expected).
+- `https://walkie.howto.rocks/api/health` → `{"status":"ok","service":"walkie"}`.
+- `https://walkie.howto.rocks/web/` → the Walkie login screen.
+
+Open `/web/` on two phones, sign in with two emails, show one QR and scan it with
+the other — you should be linked and able to chat.
+
+## 6. Retention cron (optional but recommended)
+
+Cleanup already runs opportunistically on ~5% of API requests, so retention
+holds even without cron. If your plan offers cron jobs, add:
+
+```
+*/5 * * * *  /usr/bin/php /home/vol/.../htdocs/api/cron/cleanup.php
+```
+
+(Adjust the absolute path to your account's document root.)
+
+## Notes for InfinityFree specifically
+
+- **Email:** the free plan's `mail()` is unreliable and often flagged as spam.
+  If codes don't arrive, either wire up an SMTP relay or temporarily set
+  `mail.log_only = true` and read the code from `api/storage/mail.log`.
+- **HTTPS:** enable the free SSL certificate in the panel — the app assumes
+  HTTPS (camera, microphone and the strict CSP all require a secure context).
+- **No shell:** everything runs through the web; the opportunistic cleanup means
+  no background worker is required.

@@ -1,0 +1,273 @@
+openapi: 3.0.3
+info:
+  title: Walkie API
+  version: 1.0.0
+  description: >
+    Backend for Walkie — a minimalist app for exchanging voice notes and text
+    between two users who paired by scanning a QR code. Messages are encrypted
+    at rest (AES-256-GCM) and hard-deleted once read or when they expire
+    (audio: 1h, text: 24h). Authentication is passwordless: a 6-digit code is
+    emailed and exchanged for a bearer token.
+servers:
+  - url: https://walkie.howto.rocks/api
+    description: Production
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Session token returned by /auth/verify.
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: rate_limited }
+        message: { type: string }
+        retry_after: { type: integer, nullable: true }
+    User:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        email: { type: string, format: email }
+        display_name: { type: string, maxLength: 60 }
+    Link:
+      type: object
+      properties:
+        link_id: { type: integer, format: int64 }
+        user_id: { type: integer, format: int64 }
+        display_name: { type: string }
+        unread: { type: integer }
+        created_at: { type: string, format: date-time }
+    Message:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        mine: { type: boolean }
+        type: { type: string, enum: [text, audio] }
+        read: { type: boolean }
+        text: { type: string, nullable: true }
+        audio: { type: string, nullable: true, description: base64-encoded bytes }
+        mime: { type: string, nullable: true }
+        duration_ms: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+  responses:
+    Unauthorized:
+      description: Missing or invalid session token
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/Error' } }
+    RateLimited:
+      description: Too many requests
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content:
+        application/json: { schema: { $ref: '#/components/schemas/Error' } }
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Liveness probe
+      security: []
+      responses:
+        '200': { description: OK }
+
+  /auth/request-code:
+    post:
+      summary: Email a 6-digit login code
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200': { description: Code sent (always, to avoid user enumeration) }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/verify:
+    post:
+      summary: Exchange a login code for a session token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string, pattern: '^\d{6}$' }
+      responses:
+        '200':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+        '400': { description: Invalid or expired code }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/logout:
+    post:
+      summary: Invalidate the current session
+      responses:
+        '200': { description: Logged out }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /me:
+    get:
+      summary: Current user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { user: { $ref: '#/components/schemas/User' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      summary: Update display name and/or email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name: { type: string, maxLength: 60 }
+                email: { type: string, format: email }
+      responses:
+        '200': { description: Updated }
+        '400': { description: Validation error / email taken }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /link/qr:
+    post:
+      summary: Create a pairing QR (full-screen scan target)
+      responses:
+        '200':
+          description: QR created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  pair_url: { type: string }
+                  qr_svg: { type: string, description: inline SVG }
+                  expires_in: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /link/claim:
+    post:
+      summary: Consume a scanned pairing token to link two users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '201': { description: Linked }
+        '400': { description: Invalid/expired/self pairing }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /links:
+    get:
+      summary: List linked contacts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: array
+                    items: { $ref: '#/components/schemas/Link' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /links/{id}:
+    delete:
+      summary: Unlink a contact (deletes the conversation for both users)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not found }
+
+  /links/{id}/messages:
+    get:
+      summary: Fetch new messages (marks incoming as read)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: after, in: query, required: false, schema: { type: integer }, description: return messages with id greater than this }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contact:
+                    type: object
+                    properties:
+                      user_id: { type: integer }
+                      display_name: { type: string }
+                  messages:
+                    type: array
+                    items: { $ref: '#/components/schemas/Message' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not found }
+    post:
+      summary: Send a text or audio message
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type: { type: string, enum: [text, audio] }
+                text: { type: string, description: required when type=text }
+                audio: { type: string, description: base64 bytes, required when type=audio }
+                mime: { type: string, example: audio/webm }
+                duration_ms: { type: integer }
+      responses:
+        '201': { description: Sent }
+        '400': { description: Validation error }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not found }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /links/{id}/messages/{msgId}:
+    delete:
+      summary: Delete your own message (hard delete)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: msgId, in: path, required: true, schema: { type: integer } }
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Not found or not yours }

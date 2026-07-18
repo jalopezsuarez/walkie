@@ -1,0 +1,41 @@
+# Walkie API — routing & hardening
+Options -Indexes -MultiViews
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /api/
+
+    # Never rewrite requests for real files/dirs (none are web-exposed anyway).
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?__route=/$1 [QSA,L]
+</IfModule>
+
+# Make sure the Authorization header reaches PHP (some CGI setups strip it).
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+# Block access to everything except the entry point.
+<FilesMatch "\.(php)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^index\.php$">
+    Require all granted
+</FilesMatch>
+
+# Deny sensitive folders/files outright.
+<IfModule mod_authz_core.c>
+    <FilesMatch "\.(sql|log|md|yaml|yml|py|sample\.php)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# Baseline security headers (also set in PHP; harmless if duplicated).
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "no-referrer"
+</IfModule>

@@ -1,0 +1,18 @@
+# Walkie frontend
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+# Don't expose the PHP config file.
+<FilesMatch "^config\.php$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "no-referrer"
+    # Cache static assets for a week.
+    <FilesMatch "\.(css|js|svg|woff2?)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>

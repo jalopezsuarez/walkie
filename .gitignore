@@ -1,0 +1,14 @@
+# Secrets & runtime — never commit these
+api/config/config.php
+api/storage/*.log
+api/storage/mail.log
+
+# Node (only used locally for the Playwright browser test)
+node_modules/
+package-lock.json
+package.json
+
+# Local artefacts
+*.png
+/tmp/
+.DS_Store
