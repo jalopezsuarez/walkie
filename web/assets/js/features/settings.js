@@ -60,7 +60,7 @@
                 el('div', { class: 'section-title', text: 'Perfil' }),
                 el('div', { class: 'card' }, [
                     el('div', { class: 'row' }, [
-                        el('div', { class: 'field-label', text: 'Nombre (pulsa + para otro, ← para volver)' }),
+                        el('div', { class: 'field-label', text: 'Pseudónimo' }),
                         el('div', { class: 'name-picker' }, [nameField, backBtn, newBtn])
                     ]),
                     el('div', { class: 'row' }, [el('div', { class: 'field-label', text: 'Correo' }), emailInput])
