@@ -17,7 +17,7 @@
             el('h1', { text: 'Walkie' }),
             el('span', { class: 'spacer' }),
             el('button', { class: 'btn invite-btn', html: W.ICON.plus + '<span>Invitar</span>', onclick: W.pairing.open }),
-            el('button', { class: 'iconbtn', title: 'Ajustes', html: W.ICON.gear, onclick: W.settings.screen })
+            el('button', { class: 'iconbtn settings-btn', title: 'Ajustes', html: W.ICON.gear, onclick: W.settings.screen })
         ]);
         var listWrap = el('div', { id: 'list-wrap', class: 'screen' }, [el('div', { class: 'spinner' })]);
         W.mount(el('div', { class: 'screen' }, [top, listWrap]));
