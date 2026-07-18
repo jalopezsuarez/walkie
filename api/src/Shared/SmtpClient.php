@@ -71,11 +71,15 @@ final class SmtpClient
                 'Content-Transfer-Encoding: 8bit',
                 'Message-ID: <' . bin2hex(random_bytes(16)) . '@' . explode('@', $from)[1] . '>',
             ];
-            // Dot-stuffing per RFC 5321 §4.5.2.
-            $data = implode("\r\n", $headers) . "\r\n\r\n"
-                  . preg_replace('/^\./m', '..', str_replace(["\r\n", "\r"], "\n", $body));
-            $data = str_replace("\n", "\r\n", $data);
+            // Normalise the body to CRLF and dot-stuff (RFC 5321 §4.5.2).
+            // Headers are already CRLF-joined, so normalise the body on its
+            // own and concatenate — a global \n→\r\n pass would turn the
+            // header CRLFs into CR-CR-LF ("554 Header parsing error").
+            $body = str_replace(["\r\n", "\r"], "\n", $body);
+            $body = preg_replace('/^\./m', '..', $body);
+            $body = str_replace("\n", "\r\n", $body);
 
+            $data = implode("\r\n", $headers) . "\r\n\r\n" . $body;
             $this->write($data . "\r\n.");
             $this->expect(250);
             $this->command('QUIT', 221);
