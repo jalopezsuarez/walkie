@@ -5,14 +5,15 @@
 
     function open(link) {
         W.stopTimers();
+        stopCurrent();
         W.state.current = link;
         W.state.lastMsgId = 0;
         W.state.pending = null;
 
         var top = el('div', { class: 'topbar' }, [
             el('button', { class: 'iconbtn', html: W.ICON.back, onclick: W.contacts.go }),
-            el('span', { class: 'avatar', style: 'width:34px;height:34px;font-size:14px', text: W.initials(link.display_name) }),
-            el('h1', { text: link.display_name, style: 'font-size:17px' }),
+            el('span', { class: 'avatar', style: 'width:2rem;height:2rem;font-size:.85rem', text: W.initials(link.display_name) }),
+            el('h1', { text: link.display_name, style: 'font-size:1.06rem' }),
             el('span', { class: 'spacer' }),
             el('button', { class: 'iconbtn', title: 'Eliminar contacto', html: W.ICON.trash, onclick: function () { W.contacts.remove(link); } })
         ]);
@@ -185,37 +186,77 @@
 
     function bubble(m) {
         var node = el('div', { class: 'bubble ' + (m.mine ? 'mine' : 'theirs') });
-        node.appendChild(m.type === 'text' ? el('span', { text: m.text }) : audioBubble(m));
+        if (m.type === 'text') {
+            node.appendChild(el('span', { class: 'btext', text: m.text }));
+        } else {
+            node.classList.add('audio');
+            buildAudio(node, m);
+        }
         node.appendChild(el('span', { class: 'time', text: W.fmtTime(m.created_at) }));
 
         if (m.mine) {
-            node.appendChild(el('button', { class: 'del', html: W.ICON.close, title: 'Eliminar', onclick: function (e) {
+            node.appendChild(el('button', { class: 'delx', html: '&times;', title: 'Eliminar', onclick: function (e) {
                 e.stopPropagation();
                 remove(m, node);
             } }));
-            node.addEventListener('click', function () { node.classList.toggle('show-del'); });
         }
         return node;
     }
 
-    function audioBubble(m) {
-        var audio = new Audio('data:' + (m.mime || 'audio/webm') + ';base64,' + m.audio);
-        var btn = el('button', { html: W.ICON.play });
-        var playing = false;
-        btn.addEventListener('click', function () { playing ? audio.pause() : audio.play(); });
-        audio.addEventListener('play', function () { playing = true; btn.innerHTML = W.ICON.pause; });
-        audio.addEventListener('pause', function () { playing = false; btn.innerHTML = W.ICON.play; });
-        audio.addEventListener('ended', function () { playing = false; btn.innerHTML = W.ICON.play; });
+    /* Only one audio plays at a time across the whole conversation. */
+    var current = null; // { audio, btn, fill, dur, total }
 
-        var secs = m.duration_ms ? Math.round(m.duration_ms / 1000) : null;
-        return el('div', { class: 'audio-msg' }, [
-            btn,
-            el('span', { class: 'wave' }),
-            secs ? el('span', { class: 'dur', text: secs + '″' }) : null
-        ]);
+    function stopCurrent() {
+        if (!current) return;
+        current.audio.pause();
+        current.btn.innerHTML = W.ICON.play;
+        current = null;
+    }
+
+    function fmtDur(ms) {
+        var s = Math.max(0, Math.round((ms || 0) / 1000));
+        return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+    }
+
+    function buildAudio(node, m) {
+        var audio = new Audio('data:' + (m.mime || 'audio/webm') + ';base64,' + m.audio);
+        audio.preload = 'metadata';
+        var btn = el('button', { class: 'audio-play', html: W.ICON.play });
+        var fill = el('div', { class: 'audio-fill' });
+        var dur = el('span', { class: 'audio-dur', text: fmtDur(m.duration_ms) });
+        var body = el('div', { class: 'audio-body' }, [el('div', { class: 'audio-bar' }, [fill]), dur]);
+
+        audio.addEventListener('timeupdate', function () {
+            var t = audio.duration && isFinite(audio.duration) ? audio.duration : (m.duration_ms || 0) / 1000;
+            if (t > 0) {
+                fill.style.width = (audio.currentTime / t * 100) + '%';
+                dur.textContent = fmtDur((t - audio.currentTime) * 1000);
+            }
+        });
+        audio.addEventListener('ended', function () {
+            btn.innerHTML = W.ICON.play;
+            fill.style.width = '0%';
+            dur.textContent = fmtDur(m.duration_ms);
+            if (current && current.audio === audio) current = null;
+        });
+
+        // Tapping anywhere on the bubble toggles this note; starting one stops others.
+        node.addEventListener('click', function () {
+            if (current && current.audio === audio) {
+                stopCurrent();
+            } else {
+                stopCurrent();
+                audio.play().catch(function () { W.toast('No se pudo reproducir'); });
+                btn.innerHTML = W.ICON.pause;
+                current = { audio: audio, btn: btn, fill: fill };
+            }
+        });
+
+        node.appendChild(el('div', { class: 'audio-msg' }, [btn, body]));
     }
 
     async function remove(m, node) {
+        if (current && node.contains(current.btn)) stopCurrent();
         try { await Api.deleteMessage(W.state.current.link_id, m.id); node.remove(); }
         catch (e) { W.toast(W.errMsg(e)); }
     }

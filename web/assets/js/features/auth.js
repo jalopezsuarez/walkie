@@ -38,7 +38,7 @@
                 el('p', { class: 'muted', text: 'Te enviaremos un código de 6 dígitos.' })
             ]);
         } else {
-            input = el('input', { class: 'input', type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6', placeholder: '••••••', style: 'letter-spacing:.4em;text-align:center;font-size:22px' });
+            input = el('input', { class: 'input', type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6', placeholder: '••••••', style: 'letter-spacing:.4em;text-align:center;font-size:1.35rem' });
             var verifyBtn = el('button', { class: 'btn block', text: 'Entrar' });
             var verify = async function () {
                 var code = (input.value || '').trim();

@@ -29,7 +29,7 @@
         W.mount(el('div', { class: 'screen' }, [
             el('div', { class: 'topbar' }, [
                 el('button', { class: 'iconbtn', html: W.ICON.back, onclick: W.contacts.go }),
-                el('h1', { text: 'Ajustes', style: 'font-size:17px' })
+                el('h1', { text: 'Ajustes', style: 'font-size:1.06rem' })
             ]),
             el('div', { class: 'pad' }, [
                 el('div', { class: 'section-title', text: 'Perfil' }),
