@@ -29,8 +29,31 @@ final class SendMessage
         match ($type) {
             'text'  => self::text($req, $link, $user['id']),
             'audio' => self::audio($req, $link, $user['id']),
-            default => throw ApiException::badRequest('type must be "text" or "audio"', 'invalid_type'),
+            'image' => self::image($req, $link, $user['id']),
+            default => throw ApiException::badRequest('type must be "text", "audio" or "image"', 'invalid_type'),
         };
+    }
+
+    private static function image(Request $req, array $link, int $userId): void
+    {
+        $b64 = $req->input('image');
+        if (!is_string($b64) || $b64 === '') {
+            throw ApiException::badRequest('Missing image data', 'empty_image');
+        }
+        $bytes = base64_decode($b64, true);
+        if ($bytes === false) {
+            throw ApiException::badRequest('Image must be base64', 'invalid_image');
+        }
+        if (strlen($bytes) > (int) Config::get('upload.max_image_bytes', 2097152)) {
+            throw ApiException::badRequest('Image too large', 'image_too_large');
+        }
+
+        $mime = $req->input('mime');
+        $mime = is_string($mime) && preg_match('#^image/(png|jpe?g|gif|webp)$#i', $mime)
+            ? strtolower($mime) : 'image/png';
+
+        $id = self::store($link, $userId, 'i', $bytes, (int) Config::get('ttl.image_msg', 3600), $mime);
+        Response::json(['id' => $id, 'type' => 'image'], 201);
     }
 
     private static function text(Request $req, array $link, int $userId): void

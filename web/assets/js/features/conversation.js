@@ -25,11 +25,13 @@
         W.state.poll = setInterval(function () { load(false); }, 2500);
     }
 
-    /* ---- composer (text + push-to-talk) ---- */
+    /* ---- composer (image attach + text + push-to-talk) ---- */
     function composer(link) {
         var input = el('input', { id: 'text-input', class: 'input', type: 'text', placeholder: 'Mensaje…', autocomplete: 'off' });
         var ptt = el('button', { id: 'ptt', class: 'ptt', title: 'Mantén pulsado para hablar', html: W.ICON.mic });
         var sendBtn = el('button', { class: 'ptt', style: 'display:none', html: W.ICON.send, title: 'Enviar' });
+        var attach = el('button', { class: 'iconbtn attach', title: 'Enviar imagen o sticker', html: W.ICON.image });
+        var fileInput = el('input', { type: 'file', accept: 'image/*', style: 'display:none' });
 
         function refresh() {
             var hasText = input.value.trim().length > 0;
@@ -46,9 +48,87 @@
         input.addEventListener('input', refresh);
         input.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendText(); });
         sendBtn.addEventListener('click', sendText);
-        bindPushToTalk(ptt, link);
 
-        return el('div', { id: 'composer', class: 'composer' }, [input, sendBtn, ptt]);
+        attach.addEventListener('click', function () { fileInput.click(); });
+        fileInput.addEventListener('change', function () {
+            var f = fileInput.files && fileInput.files[0];
+            if (f) sendImageFile(f, link);
+            fileInput.value = '';
+        });
+        // Paste an image (e.g. a copied Memoji sticker).
+        input.addEventListener('paste', function (e) {
+            var items = e.clipboardData && e.clipboardData.items;
+            if (!items) return;
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].type && items[i].type.indexOf('image') === 0) {
+                    var f = items[i].getAsFile();
+                    if (f) { e.preventDefault(); sendImageFile(f, link); }
+                }
+            }
+        });
+
+        bindPushToTalk(ptt, link);
+        return el('div', { id: 'composer', class: 'composer' }, [attach, fileInput, input, sendBtn, ptt]);
+    }
+
+    /* ---- images / stickers ---- */
+    async function sendImageFile(file, link) {
+        if (!/^image\//.test(file.type || '')) { W.toast('Selecciona una imagen'); return; }
+        W.toast('Enviando imagen…');
+        try {
+            var img = await prepImage(file);
+            await Api.sendImage(link.link_id, img.base64, img.mime);
+            await load(false);
+        } catch (e) { W.toast(W.errMsg(e)); }
+    }
+
+    // Keep small PNG/GIF/WebP as-is (transparency / animation); downscale big
+    // photos to a compressed JPEG so uploads stay small.
+    function prepImage(file) {
+        var MAX = 2 * 1024 * 1024;
+        if (file.size <= MAX && /image\/(png|gif|webp)/i.test(file.type)) {
+            return window.WalkieAudio.blobToBase64(file).then(function (b64) {
+                return { base64: b64, mime: file.type.toLowerCase() };
+            });
+        }
+        return new Promise(function (resolve, reject) {
+            var url = URL.createObjectURL(file);
+            var img = new Image();
+            img.onload = function () {
+                URL.revokeObjectURL(url);
+                var max = 1280, w = img.naturalWidth, h = img.naturalHeight;
+                var scale = Math.min(1, max / Math.max(w, h));
+                var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+                var canvas = document.createElement('canvas');
+                canvas.width = cw; canvas.height = ch;
+                canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+                var mime = /png|webp/i.test(file.type) ? 'image/png' : 'image/jpeg';
+                var data = canvas.toDataURL(mime, mime === 'image/jpeg' ? 0.82 : undefined);
+                var b64 = data.split(',')[1];
+                if (b64.length * 0.75 > MAX) {                 // still too big → harder JPEG
+                    b64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+                    mime = 'image/jpeg';
+                }
+                resolve({ base64: b64, mime: mime });
+            };
+            img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('No se pudo leer la imagen')); };
+            img.src = url;
+        });
+    }
+
+    function buildImage(node, m) {
+        var src = 'data:' + (m.mime || 'image/png') + ';base64,' + m.image;
+        node.appendChild(el('img', { class: 'img-msg', src: src, alt: 'imagen', loading: 'lazy' }));
+        node.addEventListener('click', function () {
+            if (node._suppressClick) { node._suppressClick = false; return; } // long-press
+            W.openOverlay(el('div', { class: 'screen' }, [
+                el('div', { class: 'ov-top' }, [
+                    el('span', { class: 'spacer' }),
+                    el('button', { class: 'iconbtn', html: W.ICON.close, onclick: W.closeOverlay })
+                ]),
+                el('div', { class: 'ov-body' }, [el('img', { class: 'img-full', src: src, alt: 'imagen' })])
+            ]));
+        });
     }
 
     function bindPushToTalk(ptt, link) {
@@ -211,6 +291,9 @@
                 node.classList.add('emoji-only', n === 1 ? 'e1' : n <= 3 ? 'e2' : n <= 6 ? 'e3' : 'e4');
             }
             node.appendChild(el('span', { class: 'btext', text: m.text }));
+        } else if (m.type === 'image') {
+            node.classList.add('image');
+            buildImage(node, m);
         } else {
             node.classList.add('audio');
             buildAudio(node, m);

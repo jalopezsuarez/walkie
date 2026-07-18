@@ -247,6 +247,14 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .bubble.emoji-only.e4 .btext { font-size: 1.45rem; }
 .bubble.emoji-only .time { color: var(--ink-3); }
 
+/* image / sticker bubble */
+.bubble.image { background: transparent !important; box-shadow: none; padding: .1rem; cursor: pointer; }
+.img-msg { display: block; max-width: min(62vw, 17rem); max-height: 44vh; width: auto; height: auto; border-radius: .9rem; }
+.bubble.image .time { text-align: right; margin-top: .15rem; }
+.img-full { max-width: 94vw; max-height: 82vh; border-radius: .5rem; }
+.attach { color: var(--accent); }
+.attach svg { width: 1.5rem; height: 1.5rem; }
+
 /* audio bubble */
 .audio-msg { display: flex; align-items: center; gap: .6rem; min-width: 11rem; padding: .15rem .4rem .15rem 0; }
 .audio-play {

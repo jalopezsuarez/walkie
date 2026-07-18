@@ -78,6 +78,11 @@
                 type: 'audio', audio: base64, mime: mime, duration_ms: durationMs
             });
         },
+        sendImage: function (linkId, base64, mime) {
+            return request('POST', '/links/' + linkId + '/messages', {
+                type: 'image', image: base64, mime: mime
+            });
+        },
         deleteMessage: function (linkId, msgId) {
             return request('DELETE', '/links/' + linkId + '/messages/' + msgId);
         }
