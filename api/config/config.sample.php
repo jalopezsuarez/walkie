@@ -31,14 +31,21 @@ return [
         'debug'       => false,   // NEVER true in production
     ],
 
-    // --- Email delivery of login codes ---
+    // --- Email delivery of login codes (SMTP relay, e.g. Brevo) ---
     'mail' => [
-        'from'        => 'no-reply@walkie.howto.rocks',
-        'from_name'   => 'Walkie',
-        // When true the 6-digit code is written to storage/mail.log and
-        // (only if app.debug is also true) returned in the API response.
-        // Useful when the host cannot send real email. Turn OFF in prod.
-        'log_only'    => false,
+        'from'      => 'service@example.com',
+        'from_name' => 'Walkie',
+        'smtp' => [
+            'host'     => 'smtp-relay.example.com',
+            'port'     => 587,
+            'security' => 'tls',              // 'tls' (STARTTLS) | 'ssl' | 'none'
+            'username' => 'CHANGE_ME',
+            'password' => 'CHANGE_ME',
+        ],
+        // When true the 6-digit code is only written to storage/mail.log and
+        // (if app.debug is also true) returned in the API response.
+        // Useful in development. Turn OFF in production.
+        'log_only'  => false,
     ],
 
     // --- Timeouts (seconds) ---

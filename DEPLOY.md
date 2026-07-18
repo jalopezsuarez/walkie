@@ -41,8 +41,11 @@ Edit `api/config/config.php`:
   php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
   ```
 - `app.debug` → **`false`**.
-- `mail.log_only` → `false` (set to `true` only if the host can't send email;
-  codes then land in `api/storage/mail.log`).
+- `mail.smtp.*` → your SMTP relay (e.g. Brevo: `smtp-relay.brevo.com`, port
+  587, security `tls`, plus your SMTP username/password) and `mail.from` →
+  the verified sender address.
+- `mail.log_only` → `false` (set to `true` only while testing; codes then
+  land in `api/storage/mail.log` instead of being emailed).
 
 `app.url` / `app.web_origin` are already set to the production URLs.
 
@@ -81,9 +84,11 @@ holds even without cron. If your plan offers cron jobs, add:
 
 ## Notes for InfinityFree specifically
 
-- **Email:** the free plan's `mail()` is unreliable and often flagged as spam.
-  If codes don't arrive, either wire up an SMTP relay or temporarily set
-  `mail.log_only = true` and read the code from `api/storage/mail.log`.
+- **Email:** codes are sent through the configured SMTP relay (native SMTP
+  client, STARTTLS + AUTH LOGIN). If InfinityFree blocks outbound SMTP ports
+  on your plan, the app falls back to PHP `mail()` and finally to
+  `api/storage/mail.log`, so you can always recover a code while you sort
+  out delivery.
 - **HTTPS:** enable the free SSL certificate in the panel — the app assumes
   HTTPS (camera, microphone and the strict CSP all require a secure context).
 - **No shell:** everything runs through the web; the opportunistic cleanup means

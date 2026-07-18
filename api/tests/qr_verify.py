@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Verifies the pure-PHP QR encoder (api/src/Services/QrCode.php) module-for-module
+Verifies the pure-PHP QR encoder (api/src/Shared/QrCode.php) module-for-module
 against the reference `qrcode` library, forcing byte mode + version + mask on
 both sides so the comparison is deterministic.
 
@@ -15,7 +15,7 @@ from qrcode.util import QRData, MODE_8BIT_BYTE
 from qrcode.constants import ERROR_CORRECT_L, ERROR_CORRECT_M, ERROR_CORRECT_Q, ERROR_CORRECT_H
 
 EC = {'L': ERROR_CORRECT_L, 'M': ERROR_CORRECT_M, 'Q': ERROR_CORRECT_Q, 'H': ERROR_CORRECT_H}
-QR_PHP = 'api/src/Services/QrCode.php'
+QR_PHP = 'api/src/Shared/QrCode.php'
 
 
 def php_str(s):
@@ -24,7 +24,7 @@ def php_str(s):
 
 def php_matrix(data, ec, version, mask):
     code = (f"require '{QR_PHP}';"
-            f"use Walkie\\Services\\QrCode;"
+            f"use Walkie\\Shared\\QrCode;"
             f"$m=QrCode::build({php_str(data)}, \"{ec}\", {version}, {mask});"
             f"foreach($m as $r){{foreach($r as $v){{echo $v?'1':'0';}}echo \"\\n\";}}")
     out = subprocess.run(['php', '-r', code], capture_output=True, text=True)

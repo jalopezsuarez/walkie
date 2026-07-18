@@ -58,31 +58,47 @@ so either side can be replaced without touching the other.
 
 ## Project layout
 
+Both halves follow **vertical slice architecture**: each feature is a
+self-contained unit (endpoint handler + its own data access on the API;
+screen + behaviour on the web), supported by a thin shared kernel.
+
 ```
 walkie/
-├── index.php                 # blank root page
-├── api/                      # ── Backend ───────────────────────────────
-│   ├── index.php             # front controller / router
-│   ├── .htaccess             # routing + hardening
-│   ├── openapi.yaml          # API specification
+├── index.php                     # blank root page
+├── api/                          # ── Backend ──────────────────────────
+│   ├── index.php                 # front controller: headers, routes → slices
+│   ├── .htaccess                 # routing + hardening
+│   ├── openapi.yaml              # API specification
 │   ├── config/
-│   │   ├── config.sample.php # copy → config.php and fill in
-│   │   └── config.php        # (git-ignored) real secrets
-│   ├── migrations/schema.sql # database schema
-│   ├── cron/cleanup.php      # retention job (also runs opportunistically)
+│   │   ├── config.sample.php     # copy → config.php and fill in
+│   │   └── config.php            # (git-ignored) real secrets
+│   ├── migrations/schema.sql     # database schema
+│   ├── cron/cleanup.php          # retention job (also runs opportunistically)
 │   ├── src/
-│   │   ├── Core/             # Config, Database, Router, Request, Response…
-│   │   ├── Security/         # Crypto, Auth, RateLimiter
-│   │   ├── Services/         # QrCode (pure PHP), Mailer, Cleanup
-│   │   ├── Models/           # UserRepo, LinkRepo, MessageRepo
-│   │   └── Controllers/      # Auth, Me, Link, Message
-│   └── tests/                # QR verifier + API & browser E2E
-└── web/                      # ── Frontend ──────────────────────────────
-    ├── index.php             # SPA shell (injects API base)
-    ├── config.php            # api_base + app name
+│   │   ├── Kernel/               # HTTP plumbing: Config, Database, Router,
+│   │   │                         #   Request, Response, Validator, errors
+│   │   ├── Shared/               # cross-cutting infra: Crypto, Session,
+│   │   │                         #   RateLimiter, SmtpClient, Mailer, QrCode
+│   │   └── Features/             # one folder per slice, one class per endpoint
+│   │       ├── Health/           #   GetHealth
+│   │       ├── Auth/             #   RequestLoginCode, VerifyLoginCode, Logout
+│   │       ├── Profile/          #   GetProfile, UpdateProfile
+│   │       ├── Pairing/          #   CreatePairingQr, ClaimPairing
+│   │       ├── Contacts/         #   ListContacts, RemoveContact
+│   │       └── Messages/         #   ListMessages, SendMessage, DeleteMessage
+│   └── tests/                    # QR verifier + API & browser E2E
+└── web/                          # ── Frontend ─────────────────────────
+    ├── index.php                 # shell (injects API base, CSP)
+    ├── config.php                # api_base + app name
     └── assets/
-        ├── css/style.css     # the entire design system
-        └── js/               # api, qr (scan), audio (PTT), app
+        ├── css/style.css         # the entire design system
+        └── js/
+            ├── api.js            # API client
+            ├── core.js           # state, DOM helpers, overlay, icons
+            ├── qr.js  audio.js   # device capabilities (scan, record)
+            ├── features/         # one file per slice
+            │   ├── auth.js  contacts.js  chat.js  pairing.js  settings.js
+            └── app.js            # boot
 ```
 
 ## Deployment

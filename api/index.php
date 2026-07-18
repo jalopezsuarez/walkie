@@ -4,22 +4,35 @@ declare(strict_types=1);
 /**
  * Walkie API — front controller.
  * All /api/* requests are routed here (see .htaccess).
+ *
+ * Architecture: vertical slices. Each endpoint is a self-contained handler
+ * under src/Features/<Slice>/, supported by a thin Kernel (HTTP + config +
+ * DB plumbing) and Shared infrastructure (crypto, sessions, rate limiting).
  */
 
-use Walkie\Core\ApiException;
-use Walkie\Core\Autoloader;
-use Walkie\Core\Config;
-use Walkie\Core\Request;
-use Walkie\Core\Response;
-use Walkie\Core\Router;
-use Walkie\Controllers\AuthController;
-use Walkie\Controllers\LinkController;
-use Walkie\Controllers\MeController;
-use Walkie\Controllers\MessageController;
-use Walkie\Security\RateLimiter;
-use Walkie\Services\Cleanup;
+use Walkie\Kernel\ApiException;
+use Walkie\Kernel\Autoloader;
+use Walkie\Kernel\Config;
+use Walkie\Kernel\Request;
+use Walkie\Kernel\Response;
+use Walkie\Kernel\Router;
+use Walkie\Features\Auth\Logout;
+use Walkie\Features\Auth\RequestLoginCode;
+use Walkie\Features\Auth\VerifyLoginCode;
+use Walkie\Features\Contacts\ListContacts;
+use Walkie\Features\Contacts\RemoveContact;
+use Walkie\Features\Health\GetHealth;
+use Walkie\Features\Messages\DeleteMessage;
+use Walkie\Features\Messages\ListMessages;
+use Walkie\Features\Messages\SendMessage;
+use Walkie\Features\Pairing\ClaimPairing;
+use Walkie\Features\Pairing\CreatePairingQr;
+use Walkie\Features\Profile\GetProfile;
+use Walkie\Features\Profile\UpdateProfile;
+use Walkie\Shared\Cleanup;
+use Walkie\Shared\RateLimiter;
 
-require __DIR__ . '/src/Core/Autoloader.php';
+require __DIR__ . '/src/Kernel/Autoloader.php';
 Autoloader::register(__DIR__ . '/src');
 Config::load(__DIR__ . '/config/config.php');
 
@@ -43,7 +56,6 @@ if ($webOrigin !== '' && $origin === $webOrigin) {
     header('Access-Control-Max-Age: 86400');
 }
 
-// Pre-flight.
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
     http_response_code(204);
     exit;
@@ -60,32 +72,32 @@ try {
 } catch (ApiException $e) {
     sendError($e);
 } catch (\Throwable $e) {
-    // DB not reachable etc. — fail closed but readable.
     sendFatal($e);
 }
 
 /* ------------------------------------------------------------------ *
- *  Routes
+ *  Routes → feature slices
  * ------------------------------------------------------------------ */
 $router = new Router();
 
-$router->get('/health', fn() => Response::json(['status' => 'ok', 'service' => 'walkie']));
+$router->get('/health', [GetHealth::class, 'handle']);
 
-$router->post('/auth/request-code', [AuthController::class, 'requestCode']);
-$router->post('/auth/verify',       [AuthController::class, 'verify']);
-$router->post('/auth/logout',       [AuthController::class, 'logout']);
+$router->post('/auth/request-code', [RequestLoginCode::class, 'handle']);
+$router->post('/auth/verify',       [VerifyLoginCode::class, 'handle']);
+$router->post('/auth/logout',       [Logout::class, 'handle']);
 
-$router->get('/me',   [MeController::class, 'show']);
-$router->patch('/me', [MeController::class, 'update']);
+$router->get('/me',   [GetProfile::class, 'handle']);
+$router->patch('/me', [UpdateProfile::class, 'handle']);
 
-$router->post('/link/qr',    [LinkController::class, 'createQr']);
-$router->post('/link/claim', [LinkController::class, 'claim']);
-$router->get('/links',       [LinkController::class, 'index']);
-$router->delete('/links/{id}', [LinkController::class, 'destroy']);
+$router->post('/link/qr',    [CreatePairingQr::class, 'handle']);
+$router->post('/link/claim', [ClaimPairing::class, 'handle']);
 
-$router->get('/links/{id}/messages',            [MessageController::class, 'index']);
-$router->post('/links/{id}/messages',           [MessageController::class, 'store']);
-$router->delete('/links/{id}/messages/{msgId}', [MessageController::class, 'destroy']);
+$router->get('/links',         [ListContacts::class, 'handle']);
+$router->delete('/links/{id}', [RemoveContact::class, 'handle']);
+
+$router->get('/links/{id}/messages',            [ListMessages::class, 'handle']);
+$router->post('/links/{id}/messages',           [SendMessage::class, 'handle']);
+$router->delete('/links/{id}/messages/{msgId}', [DeleteMessage::class, 'handle']);
 
 /* ------------------------------------------------------------------ *
  *  Dispatch
@@ -113,9 +125,8 @@ function sendError(ApiException $e): never
 
 function sendFatal(\Throwable $e): never
 {
-    $debug = (bool) Config::get('app.debug', false);
     $body = ['error' => 'server_error', 'message' => 'Internal error'];
-    if ($debug) {
+    if ((bool) Config::get('app.debug', false)) {
         $body['detail'] = $e->getMessage();
         $body['trace'] = explode("\n", $e->getTraceAsString());
     }

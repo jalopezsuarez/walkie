@@ -43,9 +43,15 @@ header(
 
     <div id="toast" class="toast hidden" role="status"></div>
 
-    <script src="assets/js/api.js?v=1"></script>
-    <script src="assets/js/qr.js?v=1"></script>
-    <script src="assets/js/audio.js?v=1"></script>
-    <script src="assets/js/app.js?v=1"></script>
+    <script src="assets/js/api.js?v=2"></script>
+    <script src="assets/js/core.js?v=2"></script>
+    <script src="assets/js/qr.js?v=2"></script>
+    <script src="assets/js/audio.js?v=2"></script>
+    <script src="assets/js/features/auth.js?v=2"></script>
+    <script src="assets/js/features/contacts.js?v=2"></script>
+    <script src="assets/js/features/chat.js?v=2"></script>
+    <script src="assets/js/features/pairing.js?v=2"></script>
+    <script src="assets/js/features/settings.js?v=2"></script>
+    <script src="assets/js/app.js?v=2"></script>
 </body>
 </html>
