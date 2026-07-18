@@ -31,7 +31,8 @@
 html, body {
     margin: 0;
     height: 100%;
-    background: var(--bg);
+    /* diagonal pastel gradient: violet -> blue */
+    background: linear-gradient(135deg, #ecd9fb 0%, #dcdcff 48%, #cfe6ff 100%) fixed;
     color: var(--ink);
     font: 1rem/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -46,7 +47,7 @@ body { overscroll-behavior-y: none; }
     min-height: 100%;
     display: flex;
     flex-direction: column;
-    background: var(--bg);
+    background: transparent;   /* let the gradient show through */
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -106,8 +107,10 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
     min-height: 3.4rem;
     padding: .45rem .8rem;
     padding-top: calc(.45rem + env(safe-area-inset-top));
-    background: var(--surface);
-    border-bottom: 1px solid var(--line);
+    background: rgba(255,255,255,.68);
+    -webkit-backdrop-filter: saturate(150%) blur(14px);
+    backdrop-filter: saturate(150%) blur(14px);
+    border-bottom: 1px solid rgba(255,255,255,.5);
 }
 .topbar h1 { font-size: 1.16rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
 .topbar .spacer { flex: 1; }
@@ -251,12 +254,14 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 
 /* composer */
 .composer {
-    border-top: 1px solid var(--line);
-    background: var(--surface);
+    border-top: 1px solid rgba(255,255,255,.5);
+    background: rgba(255,255,255,.68);
+    -webkit-backdrop-filter: saturate(150%) blur(14px);
+    backdrop-filter: saturate(150%) blur(14px);
     padding: .55rem .6rem calc(.55rem + env(safe-area-inset-bottom));
     display: flex; align-items: center; gap: .55rem;
 }
-.composer .input { border-radius: 999px; background: var(--surface-2); border-color: transparent; }
+.composer .input { border-radius: 999px; background: rgba(255,255,255,.85); border-color: transparent; }
 .ptt {
     flex: none;
     width: 3rem; height: 3rem; border-radius: 50%;
