@@ -260,7 +260,7 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .bubble .time { display: flex; align-items: center; justify-content: flex-end; gap: .2rem;
                  font-size: .62rem; margin-top: .2rem; color: var(--ink-3); }
 .checks { display: inline-flex; align-items: center; color: var(--ink-3); }
-.checks svg { height: .82rem; width: auto; }
+.checks svg { height: .72rem; width: auto; }
 .checks.sent { opacity: .45; }        /* on server, not delivered yet */
 .checks.read { color: var(--accent); } /* double check = read */
 
