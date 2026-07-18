@@ -183,8 +183,8 @@
             W.state.pending = null;
             swapComposer(link);
         } });
-        var send = el('button', { class: 'btn', text: 'Enviar', onclick: async function () {
-            send.disabled = true; send.textContent = 'Enviando…';
+        var send = el('button', { class: 'ptt', html: W.ICON.send, title: 'Enviar', onclick: async function () {
+            send.disabled = true;
             try {
                 var b64 = await window.WalkieAudio.blobToBase64(result.blob);
                 await Api.sendAudio(link.link_id, b64, result.mime, result.durationMs);
@@ -194,7 +194,7 @@
                 await load(false);
             } catch (e) {
                 W.toast(W.errMsg(e));
-                send.disabled = false; send.textContent = 'Enviar';
+                send.disabled = false;
             }
         } });
 
