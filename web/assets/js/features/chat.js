@@ -57,14 +57,29 @@
         async function begin(ev) {
             ev.preventDefault();
             if (W.state.pending) return;
-            if (!rec.supported()) { W.toast('Grabación no disponible'); return; }
+            if (!rec.supported()) {
+                W.toast('Este navegador no permite grabar audio (necesita HTTPS y micrófono)');
+                return;
+            }
             holding = true; startT = Date.now();
+            // Immediate visual feedback while the mic permission resolves.
+            ptt.classList.add('recording');
+            recIndicator(true);
             try {
                 await rec.start();
-                if (!holding) { rec.cancel(); return; } // released before mic ready
-                ptt.classList.add('recording');
-                recIndicator(true);
-            } catch (e) { holding = false; W.toast('Permiso de micrófono denegado'); }
+                if (!holding) { rec.cancel(); ptt.classList.remove('recording'); recIndicator(false); return; }
+            } catch (e) {
+                holding = false;
+                ptt.classList.remove('recording');
+                recIndicator(false);
+                var name = e && e.name ? e.name : '';
+                var msg = name === 'NotAllowedError' || name === 'SecurityError'
+                        ? 'Permiso de micrófono denegado. Actívalo en los ajustes del navegador.'
+                    : name === 'NotFoundError' || name === 'DevicesNotFoundError'
+                        ? 'No se detecta ningún micrófono.'
+                    : 'No se pudo grabar: ' + (name || (e && e.message) || e);
+                W.toast(msg);
+            }
         }
         async function end(ev) {
             if (!holding) return;

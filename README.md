@@ -158,6 +158,20 @@ php -S 127.0.0.1:8080 api/tests/router.php               # serves /api and /web
 With `app.debug = true` the login code is returned in the request-code response
 (and written to `api/storage/mail.log`), so no mailbox is needed to develop.
 
+## Notes & troubleshooting
+
+- **Microphone (push-to-talk):** the first time a user holds the mic button
+  the browser asks for microphone permission; that first hold only grants
+  access — subsequent holds record. Recording needs HTTPS (a secure context).
+  Any failure now surfaces a specific on-screen message.
+- **Email delivery:** login codes go out through the configured SMTP relay.
+  On failure the code is logged to `api/storage/mail.log` so access is never
+  lost. Make sure the `mail.from` address is a verified sender in the relay.
+- **Shared hosting bot protection (e.g. InfinityFree):** some free hosts put
+  a JavaScript anti-bot challenge in front of the site, so plain `curl`/CI
+  requests may see a challenge page instead of the app. Real browsers pass it
+  transparently.
+
 ## Tests
 
 The QR encoder and the whole API/UI were verified against real infrastructure:
