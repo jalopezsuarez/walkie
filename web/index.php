@@ -32,8 +32,13 @@ header(
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#e2dcfb">
     <title><?= htmlspecialchars($appName, ENT_QUOTES) ?></title>
-    <link rel="stylesheet" href="assets/css/style.css?v=18">
+    <link rel="stylesheet" href="assets/css/style.css?v=19">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23111'/><circle cx='50' cy='38' r='14' fill='%23fff'/><rect x='44' y='38' width='12' height='34' rx='6' fill='%23fff'/></svg>">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Walkie">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body data-api="<?= htmlspecialchars($apiBase, ENT_QUOTES) ?>">
     <div id="app" class="app" aria-live="polite"></div>
@@ -43,16 +48,17 @@ header(
 
     <div id="toast" class="toast hidden" role="status"></div>
 
-    <script src="assets/js/api.js?v=18"></script>
-    <script src="assets/js/core.js?v=18"></script>
-    <script src="assets/js/qr.js?v=18"></script>
-    <script src="assets/js/audio.js?v=18"></script>
-    <script src="assets/js/names.js?v=18"></script>
-    <script src="assets/js/features/auth.js?v=18"></script>
-    <script src="assets/js/features/contacts.js?v=18"></script>
-    <script src="assets/js/features/conversation.js?v=18"></script>
-    <script src="assets/js/features/pairing.js?v=18"></script>
-    <script src="assets/js/features/settings.js?v=18"></script>
-    <script src="assets/js/app.js?v=18"></script>
+    <script src="assets/js/api.js?v=19"></script>
+    <script src="assets/js/core.js?v=19"></script>
+    <script src="assets/js/qr.js?v=19"></script>
+    <script src="assets/js/audio.js?v=19"></script>
+    <script src="assets/js/notify.js?v=19"></script>
+    <script src="assets/js/names.js?v=19"></script>
+    <script src="assets/js/features/auth.js?v=19"></script>
+    <script src="assets/js/features/contacts.js?v=19"></script>
+    <script src="assets/js/features/conversation.js?v=19"></script>
+    <script src="assets/js/features/pairing.js?v=19"></script>
+    <script src="assets/js/features/settings.js?v=19"></script>
+    <script src="assets/js/app.js?v=19"></script>
 </body>
 </html>

@@ -74,6 +74,7 @@
 
     function logoutLocal() {
         W.stopTimers();
+        if (W.notifier) W.notifier.stop();
         Api.setToken(null); Api.setUser(null);
         W.state.user = null; W.state.links = [];
         screen('email');

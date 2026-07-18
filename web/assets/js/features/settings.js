@@ -67,6 +67,8 @@
                 ]),
                 el('div', { style: 'height:.9rem' }),
                 saveBtn,
+                el('div', { class: 'section-title', text: 'Notificaciones' }),
+                el('div', { class: 'card' }, [el('div', { class: 'row' }, [notifRow()])]),
                 el('div', { class: 'section-title', text: 'Sesión' }),
                 el('button', { class: 'btn danger block', text: 'Cerrar sesión', onclick: W.auth.logout }),
                 el('p', { class: 'muted', style: 'margin-top:1.2rem', text: 'Los audios se guardan 1 h y los textos 24 h. Al leerse se borran del servidor.' })
@@ -74,5 +76,70 @@
         ]));
     }
 
+    // Notifications control row — reflects support/permission state.
+    function notifRow() {
+        var N = window.Notify;
+        var wrap = el('div', { style: 'display:flex;align-items:center;gap:.6rem' });
+        var label = el('div', { class: 'meta' }, [
+            el('div', { class: 'name', text: 'Avisos de mensajes nuevos' }),
+            el('div', { class: 'sub', id: 'notif-sub', text: '' })
+        ]);
+        var btn = el('button', { class: 'btn subtle', id: 'notif-btn', text: '' });
+        wrap.appendChild(label);
+        wrap.appendChild(btn);
+
+        function paint() {
+            var sub = document.getElementById('notif-sub');
+            if (!N || !N.supported()) {
+                sub.textContent = 'No disponible en este navegador. En iPhone/iPad, añade Walkie a la pantalla de inicio.';
+                btn.style.display = 'none';
+                return;
+            }
+            var perm = N.permission();
+            if (perm === 'denied') {
+                sub.textContent = 'Bloqueadas. Actívalas en los ajustes del navegador para este sitio.';
+                btn.style.display = 'none';
+            } else if (perm === 'granted' && N.enabled()) {
+                sub.textContent = 'Activadas.';
+                btn.textContent = 'Desactivar'; btn.className = 'btn subtle'; btn.style.display = '';
+            } else if (perm === 'granted') {
+                sub.textContent = 'Permitidas pero apagadas.';
+                btn.textContent = 'Activar'; btn.className = 'btn'; btn.style.display = '';
+            } else {
+                sub.textContent = 'Recibe un aviso cuando te llegue un mensaje.';
+                btn.textContent = 'Activar'; btn.className = 'btn'; btn.style.display = '';
+            }
+        }
+
+        btn.addEventListener('click', async function () {
+            if (N.enabled()) {                    // turn off
+                N.setPref(false);
+                if (W.notifier) W.notifier.stop();
+                paint();
+                return;
+            }
+            if (N.permission() === 'granted') {   // already allowed, just re-enable
+                N.setPref(true);
+                if (W.notifier) W.notifier.start();
+                paint();
+                return;
+            }
+            var res = await N.request();          // ask (user gesture)
+            if (res === 'granted') {
+                N.setPref(true);
+                if (W.notifier) W.notifier.start();
+                N.show('Walkie', 'Notificaciones activadas ✅', 'walkie-test');
+                W.toast('Notificaciones activadas');
+            } else {
+                W.toast('Permiso no concedido');
+            }
+            paint();
+        });
+
+        setTimeout(paint, 0);
+        return wrap;
+    }
+
     W.settings = { screen: screen };
 })();
+
