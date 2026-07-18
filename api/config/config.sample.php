@@ -54,7 +54,7 @@ return [
     'ttl' => [
         'login_code'   => 300,        // 5 minutes
         'session'      => 60 * 60 * 24 * 30, // 30 days
-        'pairing'      => 300,        // 5 minutes
+        'pairing'      => 60,         // 1 minute (QR rotates for security)
         'audio_msg'    => 60 * 60,        // 1 hour
         'text_msg'     => 60 * 60 * 24,   // 24 hours
     ],

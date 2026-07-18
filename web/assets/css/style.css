@@ -303,6 +303,11 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .qr-card svg { display: block; width: min(72vw, 20rem); height: auto; }
 .ov-body h2 { margin: 0; font-size: 1.35rem; }
 .ov-body p { margin: 0; color: #aeb9c4; max-width: 18rem; font-size: .85rem; }
+.qr-timer {
+    color: #e9eef2; font-size: .9rem; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    background: rgba(255,255,255,.1); padding: .5rem 1.1rem; border-radius: 999px;
+}
 .ov-tabs { display: flex; gap: .5rem; background: rgba(255,255,255,.1); padding: .25rem; border-radius: 999px; }
 .ov-tabs button { padding: .5rem 1.15rem; border-radius: 999px; color: #cbd5df; font-weight: 600; }
 .ov-tabs button.active { background: #fff; color: #0e1621; }

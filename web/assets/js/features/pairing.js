@@ -1,92 +1,80 @@
-/* Feature: Pairing — full-screen QR (show + scan) and deep-link claims. */
+/* Feature: Pairing — show my full-screen QR only. It rotates every minute
+   (a live countdown below it) so a captured screenshot quickly goes stale.
+   The other person pairs by scanning it with their phone camera, which opens
+   the /web/#p=TOKEN deep link (handled by claimFromHash). */
 (function () {
     'use strict';
     var W = window.W, Api = window.Api, el = W.el;
 
-    var _scanner = null;
+    var _timer = null;
     var _pollT = null;
+    var _before = 0;
 
     function cleanup() {
-        if (_scanner) { _scanner.stop(); _scanner = null; }
+        if (_timer) { clearInterval(_timer); _timer = null; }
         if (_pollT) { clearInterval(_pollT); _pollT = null; }
     }
 
-    function open() { show('mine'); }
-
-    function show(tab) {
+    function open() {
         cleanup();
-        var tabs = el('div', { class: 'ov-tabs' }, [
-            el('button', { class: tab === 'mine' ? 'active' : '', text: 'Mi código', onclick: function () { show('mine'); } }),
-            el('button', { class: tab === 'scan' ? 'active' : '', text: 'Escanear', onclick: function () { show('scan'); } })
-        ]);
-        var body = el('div', { class: 'ov-body' }, [el('div', { class: 'spinner light' })]);
-
+        var body = el('div', { class: 'ov-body', id: 'pair-body' }, [el('div', { class: 'spinner light' })]);
         W.openOverlay(el('div', { class: 'screen' }, [
             el('div', { class: 'ov-top' }, [
-                tabs,
                 el('span', { class: 'spacer' }),
                 el('button', { class: 'iconbtn', html: W.ICON.close, onclick: W.closeOverlay })
             ]),
             body
         ]), cleanup);
 
-        tab === 'mine' ? myCode(body) : scanner(body);
+        _before = W.state.links.length;
+        refresh(body);
+        _pollT = setInterval(pollLinked, 2500);
     }
 
-    /* My full-screen QR for the other person to scan. */
-    async function myCode(body) {
+    // Fetch a fresh QR and (re)start the countdown.
+    async function refresh(body) {
+        if (_timer) { clearInterval(_timer); _timer = null; }
         try {
             var r = await Api.createQr();
             W.clear(body);
+            var timer = el('div', { class: 'qr-timer' });
             body.appendChild(el('div', { class: 'qr-card', html: r.qr_svg }));
             body.appendChild(el('h2', { text: 'Escanéame' }));
-            body.appendChild(el('p', { text: 'Pide a la otra persona que abra Walkie, pulse «Escanear» y apunte a este código.' }));
-
-            // Auto-close as soon as the other side completes the pairing.
-            var before = W.state.links.length;
-            _pollT = setInterval(async function () {
-                try {
-                    var lk = await Api.links();
-                    if ((lk.links || []).length > before) {
-                        W.state.links = lk.links;
-                        W.toast('¡Vinculado!');
-                        W.closeOverlay();
-                        W.contacts.go();
-                    }
-                } catch (e) { cleanup(); }
-            }, 2500);
+            body.appendChild(el('p', { text: 'Que la otra persona apunte la cámara de su móvil a este código.' }));
+            body.appendChild(timer);
+            countdown(timer, r.expires_in || 60, body);
         } catch (e) {
             W.clear(body);
             body.appendChild(el('p', { text: W.errMsg(e) }));
         }
     }
 
-    /* Camera scanner (native BarcodeDetector) with manual fallback. */
-    function scanner(body) {
-        W.clear(body);
-        if (!window.QrScanner.supported()) { manual(body); return; }
-
-        var video = el('video', { id: 'scanner-video', muted: 'true', playsinline: 'true' });
-        body.appendChild(video);
-        body.appendChild(el('p', { class: 'scan-hint', text: 'Apunta al código QR de la otra persona.' }));
-        body.appendChild(el('button', { class: 'link-btn', style: 'color:#b9b9be', text: 'Introducir código manualmente', onclick: function () { manual(body); } }));
-
-        _scanner = window.QrScanner.create();
-        _scanner.start(video, claim, function () { manual(body); });
+    function countdown(elm, secs, body) {
+        var left = secs;
+        function tick() {
+            if (left <= 0) {
+                clearInterval(_timer); _timer = null;
+                refresh(body);            // rotate to a new QR
+                return;
+            }
+            var m = Math.floor(left / 60), s = left % 60;
+            elm.textContent = 'Nuevo código en ' + m + ':' + ('0' + s).slice(-2);
+            left--;
+        }
+        tick();
+        _timer = setInterval(tick, 1000);
     }
 
-    function manual(body) {
-        if (_scanner) { _scanner.stop(); _scanner = null; }
-        W.clear(body);
-        var input = el('input', { class: 'input', style: 'max-width:320px', placeholder: 'Pega el enlace o código' });
-        body.appendChild(el('h2', { text: 'Vincular manualmente' }));
-        body.appendChild(el('p', { text: 'Pega el enlace del QR de la otra persona.' }));
-        body.appendChild(input);
-        body.appendChild(el('button', { class: 'btn', text: 'Vincular', onclick: function () {
-            var token = window.QrScanner.extractToken(input.value);
-            if (!token) { W.toast('Código no válido'); return; }
-            claim(token);
-        } }));
+    async function pollLinked() {
+        try {
+            var lk = await Api.links();
+            if ((lk.links || []).length > _before) {
+                W.state.links = lk.links;
+                W.toast('¡Vinculado!');
+                W.closeOverlay();
+                W.contacts.go();
+            }
+        } catch (e) { /* keep trying */ }
     }
 
     async function claim(token) {
@@ -97,11 +85,10 @@
             W.contacts.go();
         } catch (e) {
             W.toast(W.errMsg(e));
-            show('scan'); // let them retry
         }
     }
 
-    /* Deep link support: /web/#p=TOKEN (QR opened in the browser). */
+    // Deep link: /web/#p=TOKEN (the other person scanned my QR with their camera).
     function claimFromHash() {
         var token = window.QrScanner.extractToken(location.hash || '');
         if (!token) return;
