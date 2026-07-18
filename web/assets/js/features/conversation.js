@@ -15,7 +15,7 @@
             el('span', { class: 'avatar', style: 'width:2rem;height:2rem;font-size:.85rem', text: W.initials(link.display_name) }),
             el('h1', { text: link.display_name, style: 'font-size:1.06rem' }),
             el('span', { class: 'spacer' }),
-            el('button', { class: 'iconbtn', title: 'Eliminar contacto', html: W.ICON.trash, onclick: function () { W.contacts.remove(link); } })
+            el('button', { class: 'block-btn', title: 'Eliminar contacto', html: W.ICON.block, onclick: function () { W.contacts.remove(link); } })
         ]);
         var msgs = el('div', { id: 'messages', class: 'messages' }, [el('div', { class: 'spinner' })]);
 
