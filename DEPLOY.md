@@ -2,6 +2,20 @@
 
 Target host: **walkie.howto.rocks** — document root `htdocs/`.
 
+## Fast path (ZIP + installer)
+
+1. Build (or receive) a deploy ZIP whose top folder is `htdocs/`, containing a
+   filled-in `api/config/config.php` (see §2 below).
+2. In the InfinityFree **file manager**, upload the ZIP into the account root
+   and use **Extract**, so its contents land in `htdocs/`.
+3. Visit `https://walkie.howto.rocks/api/install.php?key=<app.install_key>`
+   once — it creates the schema (idempotent, key-protected).
+4. **Delete `api/install.php`** from the server.
+5. Check `https://walkie.howto.rocks/api/health` and open
+   `https://walkie.howto.rocks/web/`.
+
+The manual path below does the same thing step by step.
+
 The final layout inside `htdocs/` must be:
 
 ```

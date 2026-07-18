@@ -18,11 +18,12 @@ Options -Indexes -MultiViews
 </IfModule>
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 
-# Block access to everything except the entry point.
+# Block access to everything except the entry point (and the one-shot
+# installer, which is key-protected and should be deleted after use).
 <FilesMatch "\.(php)$">
     Require all denied
 </FilesMatch>
-<FilesMatch "^index\.php$">
+<FilesMatch "^(index|install)\.php$">
     Require all granted
 </FilesMatch>
 
