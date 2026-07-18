@@ -3,12 +3,35 @@
     'use strict';
     var W = window.W, Api = window.Api, el = W.el;
 
+    // Read/delivery tracking (per open conversation).
+    var checkEls = {};       // message id -> checks <span>
+    var pendingRead = null;  // Set of ids seen/played, not yet flushed
+    var readSent = null;     // Set of ids already reported read
+    var readTimer = null;
+    var seeObserver = null;  // IntersectionObserver for incoming text
+
     function open(link) {
         W.stopTimers();
         stopCurrent();
         W.state.current = link;
         W.state.lastMsgId = 0;
         W.state.pending = null;
+
+        checkEls = {};
+        pendingRead = (typeof Set !== 'undefined') ? new Set() : null;
+        readSent = (typeof Set !== 'undefined') ? new Set() : null;
+        if (readTimer) { clearTimeout(readTimer); readTimer = null; }
+        if (seeObserver) { seeObserver.disconnect(); seeObserver = null; }
+        if (typeof IntersectionObserver !== 'undefined') {
+            seeObserver = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) {
+                    if (e.isIntersecting && e.target._mid) {
+                        markRead(e.target._mid);
+                        seeObserver.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.6 });
+        }
 
         var top = el('div', { class: 'topbar' }, [
             el('button', { class: 'iconbtn', html: W.ICON.back, onclick: W.contacts.go }),
@@ -22,7 +45,42 @@
         W.mount(el('div', { class: 'screen chat' }, [top, msgs, composer(link)]));
 
         load(true);
-        W.state.poll = setInterval(function () { load(false); }, 2500);
+        W.state.poll = setInterval(function () { load(false); refreshStatuses(); }, 2500);
+    }
+
+    /* ---- delivery / read checks ---- */
+    function setChecks(span, delivered, read) {
+        if (read) { span.className = 'checks read'; span.innerHTML = W.ICON.check2; }
+        else if (delivered) { span.className = 'checks'; span.innerHTML = W.ICON.check1; }
+        else { span.className = 'checks sent'; span.innerHTML = W.ICON.check1; }
+    }
+
+    // Mark an incoming message read (text scrolled into view / audio played).
+    function markRead(id) {
+        if (!pendingRead || (readSent && readSent.has(id))) return;
+        pendingRead.add(id);
+        if (readTimer) return;
+        readTimer = setTimeout(flushRead, 500);
+    }
+    function flushRead() {
+        readTimer = null;
+        if (!W.state.current || !pendingRead || !pendingRead.size) return;
+        var ids = []; pendingRead.forEach(function (i) { ids.push(i); }); pendingRead.clear();
+        ids.forEach(function (i) { if (readSent) readSent.add(i); });
+        Api.markRead(W.state.current.link_id, ids).then(refreshStatuses).catch(function () {
+            ids.forEach(function (i) { if (readSent) readSent.delete(i); });
+        });
+    }
+
+    async function refreshStatuses() {
+        if (!W.state.current) return;
+        try {
+            var r = await Api.statuses(W.state.current.link_id);
+            (r.statuses || []).forEach(function (s) {
+                var span = checkEls[s.id];
+                if (span) setChecks(span, s.delivered, s.read);
+            });
+        } catch (e) { /* ignore */ }
     }
 
     /* ---- composer (text + push-to-talk) ---- */
@@ -205,7 +263,9 @@
 
     function bubble(m) {
         var node = el('div', { class: 'bubble ' + (m.mine ? 'mine' : 'theirs') });
-        if (m.type === 'text') {
+        node._mid = m.id;
+        var isText = m.type === 'text';
+        if (isText) {
             var n = emojiOnlyCount(m.text);
             if (n >= 1 && n <= 8) {
                 node.classList.add('emoji-only', n === 1 ? 'e1' : n <= 3 ? 'e2' : n <= 6 ? 'e3' : 'e4');
@@ -215,15 +275,23 @@
             node.classList.add('audio');
             buildAudio(node, m);
         }
-        node.appendChild(el('span', { class: 'time', text: W.fmtTime(m.created_at) }));
 
-        // Long-press your own bubble to delete it.
+        // Time row with delivery/read checks to the LEFT of the time.
+        var checks = el('span', { class: 'checks' });
+        checkEls[m.id] = checks;
+        setChecks(checks, m.delivered, m.read);
+        node.appendChild(el('span', { class: 'time' }, [checks, document.createTextNode(W.fmtTime(m.created_at))]));
+
         if (m.mine) {
+            // Long-press your own bubble to delete it.
             bindLongPress(node, function () {
                 W.confirmDialog('¿Eliminar este mensaje?', 'Se borrará para los dos y no dejará rastro.', 'Eliminar', function () {
                     remove(m, node);
                 });
             });
+        } else if (isText && seeObserver) {
+            // Incoming text counts as read once it scrolls into view.
+            seeObserver.observe(node);
         }
         return node;
     }
@@ -293,6 +361,10 @@
             dur.textContent = fmtDur(m.duration_ms);
             if (current && current.audio === audio) current = null;
         });
+        // Playing an incoming voice note counts as read (double check).
+        if (!m.mine) {
+            audio.addEventListener('play', function () { markRead(m.id); });
+        }
 
         // Tapping anywhere on the bubble toggles this note; starting one stops others.
         node.addEventListener('click', function () {

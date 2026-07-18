@@ -26,8 +26,16 @@ final class ListMessages
             $after = (int) $req->query['after'];
         }
 
+        // Fetching = delivered to the recipient's client (single check). Do it
+        // first so the rows we return already reflect "delivered". Actual read
+        // (double check) is set explicitly via MarkRead.
+        Database::pdo()->prepare(
+            'UPDATE messages SET delivered_at = UTC_TIMESTAMP()
+              WHERE link_id = ? AND sender_id <> ? AND delivered_at IS NULL'
+        )->execute([$link['id'], $user['id']]);
+
         $stmt = Database::pdo()->prepare(
-            'SELECT id, sender_id, type, body_cipher, mime, duration_ms, read_at, created_at, expires_at
+            'SELECT id, sender_id, type, body_cipher, mime, duration_ms, delivered_at, read_at, created_at, expires_at
                FROM messages
               WHERE link_id = ? AND id > ?
               ORDER BY id ASC
@@ -49,6 +57,7 @@ final class ListMessages
                 'id'         => (int) $r['id'],
                 'mine'       => (int) $r['sender_id'] === $user['id'],
                 'type'       => $r['type'] === 'a' ? 'audio' : 'text',
+                'delivered'  => $r['delivered_at'] !== null,
                 'read'       => $r['read_at'] !== null,
                 'created_at' => gmdate('c', strtotime($r['created_at'] . ' UTC')),
                 'expires_at' => gmdate('c', strtotime($r['expires_at'] . ' UTC')),
@@ -62,12 +71,6 @@ final class ListMessages
             }
             $messages[] = $item;
         }
-
-        // Mark everything addressed to the caller as read.
-        Database::pdo()->prepare(
-            'UPDATE messages SET read_at = UTC_TIMESTAMP()
-              WHERE link_id = ? AND sender_id <> ? AND read_at IS NULL'
-        )->execute([$link['id'], $user['id']]);
 
         Response::json([
             'contact'  => ['user_id' => $link['other_id'], 'display_name' => $link['other_name']],

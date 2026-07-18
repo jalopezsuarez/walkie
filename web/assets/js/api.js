@@ -80,6 +80,12 @@
         },
         deleteMessage: function (linkId, msgId) {
             return request('DELETE', '/links/' + linkId + '/messages/' + msgId);
+        },
+        statuses: function (linkId) {
+            return request('GET', '/links/' + linkId + '/statuses');
+        },
+        markRead: function (linkId, ids) {
+            return request('POST', '/links/' + linkId + '/read', { ids: ids });
         }
     };
 })();

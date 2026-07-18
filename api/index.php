@@ -24,6 +24,8 @@ use Walkie\Features\Contacts\RemoveContact;
 use Walkie\Features\Health\GetHealth;
 use Walkie\Features\Messages\DeleteMessage;
 use Walkie\Features\Messages\ListMessages;
+use Walkie\Features\Messages\MarkRead;
+use Walkie\Features\Messages\MessageStatuses;
 use Walkie\Features\Messages\SendMessage;
 use Walkie\Features\Pairing\ClaimPairing;
 use Walkie\Features\Pairing\CreatePairingQr;
@@ -98,6 +100,8 @@ $router->delete('/links/{id}', [RemoveContact::class, 'handle']);
 $router->get('/links/{id}/messages',            [ListMessages::class, 'handle']);
 $router->post('/links/{id}/messages',           [SendMessage::class, 'handle']);
 $router->delete('/links/{id}/messages/{msgId}', [DeleteMessage::class, 'handle']);
+$router->get('/links/{id}/statuses',            [MessageStatuses::class, 'handle']);
+$router->post('/links/{id}/read',               [MarkRead::class, 'handle']);
 
 /* ------------------------------------------------------------------ *
  *  Dispatch

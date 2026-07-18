@@ -11,25 +11,18 @@ use Walkie\Kernel\Database;
  * Runs both from cron (cron/cleanup.php) and opportunistically on a small
  * fraction of API requests, so retention holds even without a scheduler.
  *
- * Deletion rules for messages:
- *   - expires_at reached          → delete  (audio +1h, text +24h caps)
- *   - read by the recipient       → delete  (short grace so the reader's
- *                                             client has received it)
+ * Deletion rule for messages — a single fixed criterion, time only:
+ *   - expires_at reached → delete  (audio +1h, text +24h from creation)
+ * Reading a message never deletes it; it only flips its read flag.
  */
 final class Cleanup
 {
-    private const READ_GRACE_SECONDS = 5;
-
     public static function run(): void
     {
         $pdo = Database::pdo();
 
-        // Expired or already-read messages.
-        $pdo->prepare(
-            'DELETE FROM messages
-              WHERE expires_at <= UTC_TIMESTAMP()
-                 OR (read_at IS NOT NULL AND read_at <= (UTC_TIMESTAMP() - INTERVAL :g SECOND))'
-        )->execute([':g' => self::READ_GRACE_SECONDS]);
+        // Only time-expired messages are removed.
+        $pdo->exec('DELETE FROM messages WHERE expires_at <= UTC_TIMESTAMP()');
 
         // Expired auth artefacts.
         $pdo->exec('DELETE FROM login_codes   WHERE expires_at <= UTC_TIMESTAMP()');

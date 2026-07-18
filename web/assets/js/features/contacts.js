@@ -50,13 +50,14 @@
 
         var ul = el('ul', { class: 'list' });
         W.state.links.forEach(function (lk) {
-            ul.appendChild(el('li', { class: 'contact', onclick: function () { W.chat.open(lk); } }, [
+            var pending = lk.unread > 0;
+            ul.appendChild(el('li', { class: 'contact' + (pending ? ' has-unread' : ''), onclick: function () { W.chat.open(lk); } }, [
                 el('span', { class: 'avatar', text: W.initials(lk.display_name) }),
                 el('div', { class: 'meta' }, [
                     el('div', { class: 'name', text: lk.display_name }),
-                    el('div', { class: 'sub', text: lk.unread > 0 ? 'Nuevos mensajes' : 'Toca para hablar' })
+                    el('div', { class: 'sub', text: pending ? 'Mensajes pendientes' : 'Toca para hablar' })
                 ]),
-                lk.unread > 0 ? el('span', { class: 'badge', text: String(lk.unread) }) : null
+                pending ? el('span', { class: 'unread-badge', text: String(lk.unread) }) : null
             ]));
         });
         wrap.appendChild(ul);

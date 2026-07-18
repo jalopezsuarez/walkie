@@ -105,7 +105,9 @@
         trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>',
         people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17" cy="8" r="2.6"/><path d="M15.5 14.6c2.6.3 4.5 2.4 4.5 5.4"/></svg>',
         logo: '<svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="9" r="3.4"/><rect x="10.5" y="9" width="3" height="9" rx="1.5"/></svg>',
-        block: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="7" y1="12" x2="17" y2="12"/></svg>'
+        block: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="7" y1="12" x2="17" y2="12"/></svg>',
+        check1: '<svg viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l4 4 9-11"/></svg>',
+        check2: '<svg viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l4 4 9-11"/><path d="M11 13l1 1 9-11"/></svg>'
     };
 
     window.W = {

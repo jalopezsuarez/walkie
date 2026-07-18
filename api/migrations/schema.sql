@@ -111,12 +111,14 @@ CREATE TABLE IF NOT EXISTS messages (
     body_cipher  LONGBLOB        NOT NULL,
     mime         VARCHAR(40)     NULL,
     duration_ms  INT UNSIGNED    NULL,
-    read_at      DATETIME        NULL,
+    delivered_at DATETIME        NULL,  -- reached the recipient's client (single check)
+    read_at      DATETIME        NULL,  -- audio played / text seen on screen (double check)
     created_at   DATETIME        NOT NULL,
     expires_at   DATETIME        NOT NULL,
     PRIMARY KEY (id),
     KEY idx_messages_link (link_id, id),
     KEY idx_messages_expires (expires_at),
+    KEY idx_messages_delivered (delivered_at),
     KEY idx_messages_read (read_at),
     CONSTRAINT fk_messages_link   FOREIGN KEY (link_id)   REFERENCES links (id) ON DELETE CASCADE,
     CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE
