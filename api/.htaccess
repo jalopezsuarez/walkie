@@ -23,7 +23,7 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 <FilesMatch "\.(php)$">
     Require all denied
 </FilesMatch>
-<FilesMatch "^(index|install|migrate)\.php$">
+<FilesMatch "^(index|install)\.php$">
     Require all granted
 </FilesMatch>
 

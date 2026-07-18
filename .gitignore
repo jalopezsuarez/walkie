@@ -2,6 +2,7 @@
 api/config/config.php
 api/storage/*.log
 api/storage/mail.log
+api/storage/.schema_*
 
 # Node (only used locally for the Playwright browser test)
 node_modules/

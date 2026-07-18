@@ -33,6 +33,7 @@ use Walkie\Features\Profile\GetProfile;
 use Walkie\Features\Profile\UpdateProfile;
 use Walkie\Shared\Cleanup;
 use Walkie\Shared\RateLimiter;
+use Walkie\Shared\Schema;
 
 require __DIR__ . '/src/Kernel/Autoloader.php';
 Autoloader::register(__DIR__ . '/src');
@@ -70,6 +71,7 @@ $request = new Request();
  * ------------------------------------------------------------------ */
 try {
     RateLimiter::enforce('api_per_ip', $request->ip);
+    Schema::ensure();
     Cleanup::maybeRun();
 } catch (ApiException $e) {
     sendError($e);
