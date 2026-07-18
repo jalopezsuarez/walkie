@@ -184,9 +184,32 @@
         }
     }
 
+    // Number of emoji if the text is emoji-only (whitespace ignored), else 0.
+    function emojiOnlyCount(text) {
+        var t = (text || '').trim();
+        if (!t) return 0;
+        var rest;
+        try {
+            rest = t.replace(/[\p{Extended_Pictographic}\p{Emoji_Modifier}\p{Regional_Indicator}‍️\s]/gu, '');
+        } catch (e) {
+            return 0; // browser without Unicode property escapes
+        }
+        if (rest.length > 0) return 0;
+        if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+            var c = 0, it = new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(t);
+            for (var seg of it) { if (seg.segment.trim()) c++; } // ignore whitespace
+            return c;
+        }
+        return Array.from(t.replace(/\s/g, '')).filter(function (ch) { return ch !== '‍' && ch !== '️'; }).length;
+    }
+
     function bubble(m) {
         var node = el('div', { class: 'bubble ' + (m.mine ? 'mine' : 'theirs') });
         if (m.type === 'text') {
+            var n = emojiOnlyCount(m.text);
+            if (n >= 1 && n <= 8) {
+                node.classList.add('emoji-only', n === 1 ? 'e1' : n <= 3 ? 'e2' : n <= 6 ? 'e3' : 'e4');
+            }
             node.appendChild(el('span', { class: 'btext', text: m.text }));
         } else {
             node.classList.add('audio');

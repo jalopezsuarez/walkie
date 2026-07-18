@@ -227,6 +227,15 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .bubble.mine { transition: transform .12s ease, filter .12s ease; }
 .bubble.mine.pressing { transform: scale(.96); filter: brightness(.94); }
 
+/* emoji-only messages: big, no bubble background (Telegram-style) */
+.bubble.emoji-only { background: transparent !important; box-shadow: none; padding: .1rem .3rem; }
+.bubble.emoji-only .btext { line-height: 1.1; }
+.bubble.emoji-only.e1 .btext { font-size: 3.4rem; }
+.bubble.emoji-only.e2 .btext { font-size: 2.5rem; }
+.bubble.emoji-only.e3 .btext { font-size: 1.9rem; }
+.bubble.emoji-only.e4 .btext { font-size: 1.45rem; }
+.bubble.emoji-only .time { color: var(--ink-3); }
+
 /* audio bubble */
 .audio-msg { display: flex; align-items: center; gap: .6rem; min-width: 11rem; padding: .15rem .4rem .15rem 0; }
 .audio-play {
