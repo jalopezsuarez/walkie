@@ -90,7 +90,7 @@
             recIndicator(false);
             var elapsed = Date.now() - startT;
             var result = await rec.stop();
-            if (!result || elapsed < 500) { W.toast('Mantén pulsado para grabar'); return; }
+            if (!result || elapsed < 500) { return; }  // too short — silently ignore
             preview(result, link);
         }
         ptt.addEventListener('pointerdown', begin);
@@ -120,7 +120,7 @@
         W.state.pending = result;
         var url = URL.createObjectURL(result.blob);
 
-        var discard = el('button', { class: 'iconbtn', html: W.ICON.trash, title: 'Descartar', onclick: function () {
+        var discard = el('button', { class: 'discard-btn', html: W.ICON.close, title: 'Descartar', onclick: function () {
             URL.revokeObjectURL(url);
             W.state.pending = null;
             swapComposer(link);

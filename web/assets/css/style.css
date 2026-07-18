@@ -267,6 +267,13 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
     display: flex; align-items: center; gap: .6rem;
 }
 .preview audio { flex: 1; height: 2.4rem; }
+.discard-btn {
+    flex: none;
+    width: 2.7rem; height: 2.7rem; border-radius: 50%;
+    background: var(--danger); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+}
+.discard-btn svg { width: 1.2rem; height: 1.2rem; }
 .rec-indicator { display: flex; align-items: center; gap: .5rem; color: var(--danger); font-weight: 600; font-size: .85rem; }
 .rec-dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--danger); animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
