@@ -224,13 +224,9 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 }
 .empty svg { width: 3rem; height: 3rem; color: var(--ink-3); }
 
-.fab {
-    position: sticky;
-    bottom: calc(1.1rem + env(safe-area-inset-bottom));
-    margin: 0 1rem calc(1rem + env(safe-area-inset-bottom));
-    align-self: flex-end;
-    box-shadow: var(--shadow);
-}
+/* compact "Invitar" action in the top bar */
+.invite-btn { min-height: 2.1rem; padding: 0 .8rem; gap: .3rem; font-size: .85rem; }
+.invite-btn svg { width: 1rem; height: 1rem; }
 
 /* ---- Chat ------------------------------------------------------------ */
 .chat { flex: 1; display: flex; flex-direction: column; min-height: 0; }

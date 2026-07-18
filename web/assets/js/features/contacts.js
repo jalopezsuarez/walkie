@@ -16,11 +16,11 @@
         var top = el('div', { class: 'topbar' }, [
             el('h1', { text: 'Walkie' }),
             el('span', { class: 'spacer' }),
+            el('button', { class: 'btn invite-btn', html: W.ICON.plus + '<span>Invitar</span>', onclick: W.pairing.open }),
             el('button', { class: 'iconbtn', title: 'Ajustes', html: W.ICON.gear, onclick: W.settings.screen })
         ]);
         var listWrap = el('div', { id: 'list-wrap', class: 'screen' }, [el('div', { class: 'spinner' })]);
-        var fab = el('button', { class: 'btn fab', html: W.ICON.plus + '<span>Vincular</span>', onclick: W.pairing.open });
-        W.mount(el('div', { class: 'screen' }, [top, listWrap, fab]));
+        W.mount(el('div', { class: 'screen' }, [top, listWrap]));
         renderList();
     }
 
