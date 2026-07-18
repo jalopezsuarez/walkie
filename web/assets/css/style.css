@@ -220,22 +220,12 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .bubble.mine { align-self: flex-end; background: var(--bubble-out); border-bottom-right-radius: .35rem; }
 .bubble.theirs { align-self: flex-start; border-bottom-left-radius: .35rem; }
 .bubble.audio { cursor: pointer; }
-.bubble .btext { display: block; padding-right: .6rem; }
+.bubble .btext { display: block; }
 .bubble .time { display: block; font-size: .62rem; margin-top: .2rem; color: var(--ink-3); text-align: right; }
 
-/* delete control — an × INSIDE the bubble (top-right corner) */
-.bubble .delx {
-    position: absolute;
-    top: .1rem; right: .25rem;
-    width: 1.05rem; height: 1.05rem;
-    border-radius: 50%;
-    display: none;
-    align-items: center; justify-content: center;
-    font-size: .9rem; line-height: 1;
-    color: var(--ink-3);
-}
-.bubble.mine .delx { display: inline-flex; }
-.bubble .delx:active { color: var(--danger); }
+/* long-press feedback (delete gesture on your own bubbles) */
+.bubble.mine { transition: transform .12s ease, filter .12s ease; }
+.bubble.mine.pressing { transform: scale(.96); filter: brightness(.94); }
 
 /* audio bubble */
 .audio-msg { display: flex; align-items: center; gap: .6rem; min-width: 11rem; padding: .15rem .4rem .15rem 0; }

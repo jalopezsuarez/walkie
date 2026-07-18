@@ -194,13 +194,44 @@
         }
         node.appendChild(el('span', { class: 'time', text: W.fmtTime(m.created_at) }));
 
+        // Long-press your own bubble to delete it.
         if (m.mine) {
-            node.appendChild(el('button', { class: 'delx', html: '&times;', title: 'Eliminar', onclick: function (e) {
-                e.stopPropagation();
-                remove(m, node);
-            } }));
+            bindLongPress(node, function () {
+                W.confirmDialog('¿Eliminar este mensaje?', 'Se borrará para los dos y no dejará rastro.', 'Eliminar', function () {
+                    remove(m, node);
+                });
+            });
         }
         return node;
+    }
+
+    /* Long-press / long-click helper. Cancels on move or early release, and
+       swallows the click that follows so it doesn't also trigger audio play. */
+    function bindLongPress(node, onLong) {
+        var timer = null, sx = 0, sy = 0;
+        node._suppressClick = false;
+
+        function cancel() {
+            if (timer) { clearTimeout(timer); timer = null; }
+            node.classList.remove('pressing');
+        }
+        node.addEventListener('pointerdown', function (e) {
+            if (e.button && e.button !== 0) return;
+            sx = e.clientX; sy = e.clientY;
+            node.classList.add('pressing');
+            timer = setTimeout(function () {
+                timer = null;
+                node.classList.remove('pressing');
+                node._suppressClick = true;
+                onLong();
+            }, 550);
+        });
+        node.addEventListener('pointerup', cancel);
+        node.addEventListener('pointercancel', cancel);
+        node.addEventListener('pointermove', function (e) {
+            if (timer && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) cancel();
+        });
+        node.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     }
 
     /* Only one audio plays at a time across the whole conversation. */
@@ -242,6 +273,7 @@
 
         // Tapping anywhere on the bubble toggles this note; starting one stops others.
         node.addEventListener('click', function () {
+            if (node._suppressClick) { node._suppressClick = false; return; } // long-press just fired
             if (current && current.audio === audio) {
                 stopCurrent();
             } else {
