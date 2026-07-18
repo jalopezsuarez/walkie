@@ -334,6 +334,17 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 
 /* ---- Settings -------------------------------------------------------- */
 .section-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); margin: 1.3rem .25rem .5rem; }
+/* small informational note on a light, translucent background */
+.note {
+    margin: 1.2rem 0 0;
+    padding: .6rem .8rem;
+    background: rgba(255,255,255,.55);
+    border-radius: .8rem;
+    font-size: .68rem;
+    line-height: 1.4;
+    color: var(--ink-2);
+}
+#notif-sub { font-size: .68rem; }
 .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .name-picker { display: flex; align-items: center; gap: .4rem; }
 .name-field { flex: 1; font-weight: 600; }
