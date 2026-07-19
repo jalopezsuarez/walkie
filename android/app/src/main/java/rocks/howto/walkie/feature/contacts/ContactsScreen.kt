@@ -1,10 +1,10 @@
 package rocks.howto.walkie.feature.contacts
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,7 +38,6 @@ import rocks.howto.walkie.core.designsystem.walkieBackground
 import rocks.howto.walkie.core.network.Contact
 import rocks.howto.walkie.nav.screenViewModel
 
-private val UnreadGreen = Color(0xFF35B36B)
 
 @Composable
 fun ContactsScreen(
@@ -105,7 +104,11 @@ fun ContactsScreen(
                 }
             }
         } else {
-            LazyColumn(Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 items(vm.contacts, key = { it.linkId }) { c ->
                     ContactRow(c) { onOpen(c) }
                 }
@@ -116,27 +119,39 @@ fun ContactsScreen(
 
 @Composable
 private fun ContactRow(c: Contact, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    val pending = c.unread > 0
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = WalkieColors.Surface,
+        shadowElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Avatar(c.displayName, size = 46.dp)
-        Text(
-            c.displayName,
-            modifier = Modifier.weight(1f).padding(start = 14.dp),
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Medium,
-            color = WalkieColors.TextPrimary,
-        )
-        if (c.unread > 0) {
-            Box(
-                modifier = Modifier.size(24.dp).clip(CircleShape).background(UnreadGreen),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(c.unread.coerceAtMost(99).toString(), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Avatar(c.displayName, size = 46.dp)
+            Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
+                Text(
+                    c.displayName,
+                    fontSize = 17.sp,
+                    fontWeight = if (pending) FontWeight.Bold else FontWeight.Medium,
+                    color = WalkieColors.TextPrimary,
+                )
+                Text(
+                    if (pending) "Mensajes pendientes" else "Toca para hablar",
+                    fontSize = 13.sp,
+                    color = WalkieColors.TextMuted,
+                )
+            }
+            if (pending) {
+                Box(
+                    modifier = Modifier.size(24.dp).clip(CircleShape).background(WalkieColors.Accent),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(c.unread.coerceAtMost(99).toString(), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

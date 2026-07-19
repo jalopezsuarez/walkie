@@ -2,12 +2,14 @@ package rocks.howto.walkie.feature.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,6 +20,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import rocks.howto.walkie.R
 import androidx.compose.ui.text.font.FontWeight
@@ -38,12 +42,21 @@ fun AuthScreen(onAuthed: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_brand),
-            contentDescription = null,
-            tint = WalkieColors.Brand,
-            modifier = Modifier.size(64.dp).padding(bottom = 12.dp),
-        )
+        Box(
+            modifier = Modifier
+                .padding(bottom = 14.dp)
+                .size(72.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(WalkieColors.Brand),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_brand),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(42.dp),
+            )
+        }
         Text("Walkie", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = WalkieColors.TextPrimary)
         Text(
             "Notas de voz y texto, entre dos.",
