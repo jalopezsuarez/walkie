@@ -1,0 +1,128 @@
+# Walkie — API (backend)
+
+Backend de Walkie: **PHP puro + MySQL**, sin frameworks ni dependencias, con una
+**API JSON documentada en OpenAPI**. Arquitectura *vertical slice*: una carpeta
+por funcionalidad, un archivo por endpoint, sobre un kernel HTTP mínimo.
+
+> Parte de un proyecto con tres piezas. Visión general y enlaces en el
+> [README raíz](../README.md). Frontend en [`../web`](../web/README.md), app
+> Android en [`../android`](../android/README.md).
+
+```
+walkie.howto.rocks/api   →  este backend
+```
+
+Contrato completo y navegable: **[`openapi.yaml`](openapi.yaml)** (OpenAPI 3.x).
+
+---
+
+## Estructura (vertical slice)
+
+```
+api/
+├── index.php               # front controller: cabeceras, CORS, rutas → slices
+├── openapi.yaml            # especificación OpenAPI (contrato oficial)
+├── install.php             # instalador de esquema (protegido por clave; borrar tras usar)
+├── .htaccess               # rewrites + hardening
+├── config/
+│   ├── config.sample.php   # copiar → config.php y rellenar
+│   └── config.php          # (git-ignored) secretos reales
+├── migrations/schema.sql   # esquema de base de datos
+├── cron/cleanup.php        # retención (también corre de forma oportunista)
+├── src/
+│   ├── Kernel/             # HTTP: Config, Database, Router, Request, Response,
+│   │                       #   Validator, ApiException, Autoloader
+│   ├── Shared/             # infra transversal: Crypto, Session, RateLimiter,
+│   │                       #   SmtpClient, Mailer, QrCode, Cleanup, Schema
+│   └── Features/           # un slice por carpeta, una clase por endpoint
+│       ├── Health/         #   GetHealth
+│       ├── Auth/           #   RequestLoginCode, VerifyLoginCode, Logout, UserAccount
+│       ├── Profile/        #   GetProfile, UpdateProfile
+│       ├── Pairing/        #   CreatePairingQr, ClaimPairing
+│       ├── Contacts/       #   ListContacts, RemoveContact
+│       └── Messages/       #   ListMessages, SendMessage, DeleteMessage,
+│                           #   MessageStatuses, MarkRead, Conversation
+└── tests/                  # verificador de QR + E2E de API y navegador
+```
+
+## Endpoints
+
+Todo requiere token **Bearer** salvo `/health` y los dos `/auth` de entrada.
+El contrato autoritativo está en [`openapi.yaml`](openapi.yaml).
+
+| Método | Ruta | Propósito |
+|---|---|---|
+| GET | `/health` | Liveness |
+| POST | `/auth/request-code` | Enviar código de 6 dígitos por email |
+| POST | `/auth/verify` | Canjear código por token de sesión |
+| POST | `/auth/logout` | Invalidar la sesión |
+| GET / PATCH | `/me` | Leer / actualizar perfil (nombre, email) |
+| POST | `/link/qr` | Emitir token de emparejamiento + QR (SVG) |
+| POST | `/link/claim` | Consumir un token escaneado → vincular dos usuarios |
+| GET | `/links` | Contactos vinculados con no leídos |
+| DELETE | `/links/{id}` | Desvincular (borra la conversación para ambos) |
+| GET | `/links/{id}/messages` | Nuevos mensajes (`?after=`, `?wait=1` long-poll) |
+| POST | `/links/{id}/messages` | Enviar texto o audio |
+| DELETE | `/links/{id}/messages/{msgId}` | Borrar un mensaje propio |
+| GET | `/links/{id}/statuses` | Estados de entrega/lectura |
+| POST | `/links/{id}/read` | Marcar como leídos |
+
+## Autenticación
+
+Login **passwordless**: email → código de 6 dígitos (TTL 5 min, un solo uso,
+máx. 5 intentos) → **token Bearer** de sesión (RFC 6750). El backend guarda solo
+**hashes SHA-256** de códigos y tokens. El esquema de seguridad está declarado en
+`openapi.yaml` (`securitySchemes`).
+
+## Seguridad
+
+| Área | Medida |
+|---|---|
+| Contenido de mensajes | AES-256-GCM en reposo, clave por conversación derivada con HKDF; el servidor solo guarda cifrado |
+| Transporte | HTTPS + CORS estricto al origen web; auth por Bearer (a prueba de CSRF) |
+| Códigos y tokens | Solo hashes SHA-256; códigos de un uso, TTL 5 min, máx. 5 intentos |
+| Email | Cliente SMTP nativo (STARTTLS + AUTH LOGIN, RFC 5321); *fallback* a `mail()` y a log |
+| Abuso | Rate limiting de ventana fija por IP, email y usuario; `429` con `Retry-After` |
+| Inyección | 100% PDO con *prepared statements*; validación estricta |
+| Cabeceras | `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, CSP |
+| Minimización | Mensajes efímeros; limpieza oportunista + cron purga expirados/leídos |
+
+> **Modelo de cifrado.** Los mensajes se cifran en reposo y en tránsito; la base
+> de datos nunca guarda texto plano. Como el login es passwordless y funciona
+> entre dispositivos, las claves viven en el servidor (no E2E) — un compromiso
+> deliberado. La derivación por conversación minimiza el radio de exposición.
+
+## Requisitos
+
+- PHP 8.1+ (extensiones PDO MySQL + OpenSSL)
+- MySQL 5.7+ / MariaDB 10.3+
+- Apache con `mod_rewrite` (o equivalente para los rewrites del `.htaccess`)
+
+## Puesta en marcha
+
+1. `cp config/config.sample.php config/config.php` y rellena DB, SMTP, una
+   `app.key` nueva (`php -r "echo base64_encode(random_bytes(32));"`) y una
+   `app.install_key` aleatoria.
+2. Sube `index.php`, `api/` y `web/` al *document root*.
+3. Visita `https://<host>/api/install.php?key=<app.install_key>` una vez para
+   crear el esquema y **borra `install.php`**.
+4. Comprueba `https://<host>/api/health`.
+5. (Opcional) Programa `php cron/cleanup.php` cada pocos minutos; la retención
+   también corre de forma oportunista con el tráfico.
+
+## Desarrollo local
+
+```bash
+cp config/config.sample.php config/config.php   # DB local, debug + log_only
+php install.php <tu-install-key>                 # crea el esquema
+php -S 127.0.0.1:8080 tests/router.php           # sirve /api y /web
+```
+
+## Tests
+
+```bash
+python3 tests/qr_verify.py         # encoder QR vs librería de referencia (byte-idéntico)
+php -S 127.0.0.1:8080 tests/router.php &
+bash tests/integration.sh          # flujo completo de API contra MySQL real
+node tests/e2e_browser.js          # frontend en navegador real (dos usuarios)
+```
