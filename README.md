@@ -90,3 +90,8 @@ Modelo de seguridad unificado (web + API + Android): **[SECURITY.md](SECURITY.md
 Requisitos (PHP 8.1+, MySQL/MariaDB, Apache `mod_rewrite`), puesta en marcha y
 tests están en **[api/README.md](api/README.md)**. El encoder de QR y el flujo
 completo (API + navegador) están verificados contra infraestructura real.
+
+## Créditos
+
+- Icono de marca ("secure chat"): diseño propio inspirado en **Secure chat by
+  Gem Designs** del [Noun Project](https://thenounproject.com/browse/icons/term/secure-chat/) (CC BY 3.0).

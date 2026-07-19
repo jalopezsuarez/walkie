@@ -14,6 +14,7 @@
 
     function render() {
         var top = el('div', { class: 'topbar' }, [
+            el('span', { class: 'brand-logo', html: W.ICON.logo }),
             el('h1', { text: 'Walkie' }),
             el('span', { class: 'spacer' }),
             el('button', { class: 'btn invite-btn', html: W.ICON.plus + '<span>Invitar</span>', onclick: W.pairing.open }),
@@ -41,7 +42,7 @@
 
         if (!W.state.links.length) {
             wrap.appendChild(el('div', { class: 'empty' }, [
-                el('span', { html: W.ICON.people }),
+                el('span', { class: 'empty-logo', html: W.ICON.logo }),
                 el('div', { text: 'Aún no tienes contactos.' }),
                 el('div', { class: 'muted', text: 'Pulsa «Vincular» y escanea el código QR de la otra persona.' })
             ]));

@@ -16,8 +16,9 @@
     --ink: #0f1720;
     --ink-2: #64727e;
     --ink-3: #9aa7b2;
-    --accent: #3390ec;             /* Telegram blue */
+    --accent: #3390ec;             /* Telegram blue (actions) */
     --accent-ink: #ffffff;
+    --brand: #7b6fd0;              /* Walkie brand violet (logo/identity) */
     --bubble-out: #eeffde;         /* Telegram outgoing green */
     --danger: #e0533d;
     --radius: 1rem;
@@ -168,10 +169,16 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 /* ---- Brand / auth ---------------------------------------------------- */
 .brand { text-align: center; margin-bottom: .5rem; }
 .brand .logo {
-    width: 4rem; height: 4rem; border-radius: 1.2rem; background: var(--accent);
+    width: 4rem; height: 4rem; border-radius: 1.2rem; background: var(--brand); color: #fff;
     display: inline-flex; align-items: center; justify-content: center; margin-bottom: .8rem;
 }
 .brand .logo svg { width: 2.1rem; height: 2.1rem; }
+
+/* Brand mark (secure-chat glyph) in the navbar and empty states */
+.topbar .brand-logo { display: inline-flex; align-items: center; color: var(--brand); margin-right: .1rem; }
+.topbar .brand-logo svg { width: 1.55rem; height: 1.55rem; }
+.empty .empty-logo { display: block; color: var(--brand); opacity: .5; margin: 0 auto .55rem; }
+.empty .empty-logo svg { width: 3.4rem; height: 3.4rem; }
 .brand h1 { margin: 0; font-size: 1.7rem; letter-spacing: -.02em; }
 .brand p { margin: .35rem 0 0; color: var(--ink-2); font-size: .85rem; }
 

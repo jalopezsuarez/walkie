@@ -1,4 +1,5 @@
 <resources>
     <color name="walkie_bg">#E9EEF2</color>
     <color name="walkie_accent">#E2DCFB</color>
+    <color name="walkie_brand">#7B6FD0</color>
 </resources>

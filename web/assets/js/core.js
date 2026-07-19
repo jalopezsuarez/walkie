@@ -106,7 +106,7 @@
         pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>',
         trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>',
         people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17" cy="8" r="2.6"/><path d="M15.5 14.6c2.6.3 4.5 2.4 4.5 5.4"/></svg>',
-        logo: '<svg viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="9" r="3.4"/><rect x="10.5" y="9" width="3" height="9" rx="1.5"/></svg>',
+        logo: '<svg viewBox="0 0 48 48" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"><path d="M13 7 H35 A7 7 0 0 1 42 14 V25 A7 7 0 0 1 35 32 H24 L15 39 V32 H13 A7 7 0 0 1 6 25 V14 A7 7 0 0 1 13 7 Z M20 19 a4 4 0 1 1 8 0 a4 4 0 1 1 -8 0 Z M22.4 21.2 h3.2 l1 6.3 h-5.2 z"/></svg>',
         block: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="7" y1="12" x2="17" y2="12"/></svg>',
         check1: '<svg viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l4 4 9-11"/></svg>',
         check2: '<svg viewBox="0 0 26 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l4 4 9-11"/><path d="M11 13l1 1 9-11"/></svg>'

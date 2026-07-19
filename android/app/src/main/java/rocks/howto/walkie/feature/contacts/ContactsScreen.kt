@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import rocks.howto.walkie.R
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -51,6 +53,12 @@ fun ContactsScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_brand),
+                contentDescription = null,
+                tint = WalkieColors.Accent,
+                modifier = Modifier.size(24.dp).padding(end = 7.dp),
+            )
             Text("Walkie", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = WalkieColors.TextPrimary)
             Spacer(Modifier.weight(1f))
             Surface(

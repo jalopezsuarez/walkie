@@ -275,6 +275,7 @@
         });
         if (initial && !box.children.length) {
             box.appendChild(el('div', { class: 'empty', style: 'flex:1' }, [
+                el('span', { class: 'empty-logo', html: W.ICON.logo }),
                 el('div', { class: 'muted', text: 'Di algo 👋' })
             ]));
         }
