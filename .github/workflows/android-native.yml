@@ -29,6 +29,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check signing secret presence
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # Diagnostic only — never prints the secret value, just presence/length.
+          check() { if [ -n "${2:-}" ]; then echo "  $1: PRESENT (length ${#2})"; else echo "  $1: ABSENT"; fi; }
+          echo "Repository secrets visible to this run:"
+          check ANDROID_KEYSTORE_BASE64   "${ANDROID_KEYSTORE_BASE64:-}"
+          check ANDROID_KEYSTORE_PASSWORD "${ANDROID_KEYSTORE_PASSWORD:-}"
+          check ANDROID_KEY_ALIAS         "${ANDROID_KEY_ALIAS:-}"
+          check ANDROID_KEY_PASSWORD      "${ANDROID_KEY_PASSWORD:-}"
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
