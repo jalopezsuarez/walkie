@@ -49,6 +49,12 @@ header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('Referrer-Policy: no-referrer');
 header('Cross-Origin-Resource-Policy: same-site');
+// The API only ever returns JSON — forbid it being treated as a document.
+header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+header('Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()');
+header('X-Permitted-Cross-Domain-Policies: none');
+// HSTS: force HTTPS for two years, including subdomains (served over TLS).
+header('Strict-Transport-Security: max-age=63072000; includeSubDomains; preload');
 header_remove('X-Powered-By');
 
 if ($webOrigin !== '' && $origin === $webOrigin) {

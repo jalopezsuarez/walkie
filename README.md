@@ -79,9 +79,11 @@ walkie/
 ## Seguridad (resumen)
 
 Cifrado de mensajes AES-256-GCM en reposo (clave por conversación vía HKDF),
-solo hashes SHA-256 de códigos y tokens, CORS estricto, rate limiting por
-IP/email/usuario, 100% *prepared statements*, CSP estricta y cabeceras de
-seguridad. Detalle en [api/README.md](api/README.md#seguridad).
+OAuth 2.0 (JWT + refresh rotatorio), solo hashes SHA-256 de códigos y tokens,
+HTTPS + HSTS, CORS estricto, rate limiting por IP/email/usuario, 100%
+*prepared statements*, CSP estricta y cabeceras de seguridad, APK firmado.
+
+Modelo de seguridad unificado (web + API + Android): **[SECURITY.md](SECURITY.md)**.
 
 ## Requisitos y tests
 

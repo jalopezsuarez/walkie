@@ -34,11 +34,27 @@ android {
         buildConfigField("String", "API_BASE", "\"$apiBase\"")
     }
 
+    // Release signing. Reads a keystore from env (CI) or gradle.properties
+    // (local). When none is configured the release build is left unsigned.
+    val keystorePath = System.getenv("WALKIE_KEYSTORE") ?: (project.findProperty("walkie.keystore") as String?)
+    val hasKeystore = keystorePath != null && file(keystorePath).exists()
+    signingConfigs {
+        if (hasKeystore) {
+            create("release") {
+                storeFile = file(keystorePath!!)
+                storePassword = System.getenv("WALKIE_KEYSTORE_PASSWORD") ?: project.findProperty("walkie.keystorePassword") as String?
+                keyAlias = System.getenv("WALKIE_KEY_ALIAS") ?: project.findProperty("walkie.keyAlias") as String? ?: "walkie"
+                keyPassword = System.getenv("WALKIE_KEY_PASSWORD") ?: project.findProperty("walkie.keyPassword") as String?
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (hasKeystore) signingConfig = signingConfigs.getByName("release")
         }
     }
 

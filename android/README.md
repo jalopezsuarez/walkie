@@ -102,9 +102,32 @@ gradle assembleDebug          # APK de depuración (sin Firebase hace falta)
 # APK en app/build/outputs/apk/debug/app-debug.apk
 ```
 
-El **workflow** `.github/workflows/android-native.yml` compila el APK en CI y lo
-publica en *Releases* (firma efímera). Se dispara al hacer push a `main` que
-toque `android/**`, o manualmente desde la pestaña *Actions*.
+El **workflow** `.github/workflows/android-native.yml` compila el APK **de
+release firmado** en CI y lo publica en *Releases*. Se dispara al hacer push a
+`main` que toque `android/**`, o manualmente desde *Actions*.
+
+## Firma del APK
+
+La firma de release lee un keystore desde variables de entorno (CI) o
+`gradle.properties` (local): `walkie.keystore`, `walkie.keystorePassword`,
+`walkie.keyAlias`, `walkie.keyPassword`.
+
+En CI, si defines el *secret* `ANDROID_KEYSTORE_BASE64` (+ `…_PASSWORD`,
+`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`) se firma con **tu** keystore
+(actualizaciones limpias en el dispositivo). Si no, se firma con una clave
+**efímera** por build (instala, pero para actualizar hay que desinstalar).
+
+Crear un keystore estable una vez y cargarlo como secret:
+
+```bash
+keytool -genkeypair -v -keystore walkie.keystore -alias walkie \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -storepass '<PASS>' -keypass '<PASS>' -dname "CN=Walkie, O=Walkie, C=ES"
+base64 -w0 walkie.keystore    # pega el resultado en el secret ANDROID_KEYSTORE_BASE64
+```
+
+Guarda el `.keystore` y las contraseñas de forma segura: son las que permiten
+publicar actualizaciones de la app.
 
 ---
 

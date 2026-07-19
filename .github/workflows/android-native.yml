@@ -43,17 +43,43 @@ jobs:
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Build debug APK
+      - name: Build signed release APK
         working-directory: android
         env:
           VERSION_NAME: ${{ github.event.inputs.version || '1.0.0' }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -euxo pipefail
+          # Provide a signing keystore: use the repo secret if present, else
+          # generate an ephemeral one so the release APK is always signed.
+          export WALKIE_KEYSTORE="$RUNNER_TEMP/walkie.keystore"
+          if [ -n "${ANDROID_KEYSTORE_BASE64:-}" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$WALKIE_KEYSTORE"
+            export WALKIE_KEYSTORE_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
+            export WALKIE_KEY_ALIAS="${ANDROID_KEY_ALIAS:-walkie}"
+            export WALKIE_KEY_PASSWORD="${ANDROID_KEY_PASSWORD:-$ANDROID_KEYSTORE_PASSWORD}"
+            echo "Signing with the configured keystore secret."
+          else
+            export WALKIE_KEYSTORE_PASSWORD="$(openssl rand -hex 16)"
+            export WALKIE_KEY_ALIAS="walkie"
+            export WALKIE_KEY_PASSWORD="$WALKIE_KEYSTORE_PASSWORD"
+            keytool -genkeypair -v -keystore "$WALKIE_KEYSTORE" -alias walkie \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$WALKIE_KEYSTORE_PASSWORD" -keypass "$WALKIE_KEY_PASSWORD" \
+              -dname "CN=Walkie, O=Walkie, C=ES"
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret set — signed with an EPHEMERAL key. Add the secret for stable in-place updates."
+          fi
+
           curl -sL https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /tmp/gradle
           GRADLE=/tmp/gradle/gradle-8.11.1/bin/gradle
-          "$GRADLE" :app:assembleDebug --no-daemon --stacktrace
-          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/walkie-android-${VERSION_NAME}.apk"
+          "$GRADLE" :app:assembleRelease --no-daemon --stacktrace
+          APK="$(ls app/build/outputs/apk/release/*.apk | head -n1)"
+          echo "Built signed APK: $APK"
+          cp "$APK" "$GITHUB_WORKSPACE/walkie-android-${VERSION_NAME}.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -67,10 +93,13 @@ jobs:
           tag_name: android-v${{ github.event.inputs.version || '1.0.0' }}-${{ github.run_number }}
           name: Walkie Android ${{ github.event.inputs.version || '1.0.0' }}
           body: |
-            APK nativo (debug) de Walkie para Android.
+            APK nativo (release, firmado) de Walkie para Android.
 
             Instalación: descarga el `.apk`, ábrelo en el móvil y permite
             "Instalar apps de orígenes desconocidos" si te lo pide.
 
-            Nota: build de depuración firmado con la clave debug estándar.
+            Firma: con el keystore del repo (secret `ANDROID_KEYSTORE_BASE64`)
+            si está configurado; si no, con una clave efímera por build
+            (para actualizaciones limpias, configura el secret — ver
+            android/README.md).
           files: walkie-android-*.apk

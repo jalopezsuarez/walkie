@@ -15,6 +15,8 @@ $appName = $config['app_name'];
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('Referrer-Policy: no-referrer');
+header('Strict-Transport-Security: max-age=63072000; includeSubDomains; preload');
+header('Permissions-Policy: geolocation=(), payment=(), usb=()');
 // script-src stays strictly 'self' (the real XSS vector). Inline style
 // attributes are allowed ('unsafe-inline' for styles only) — they cannot
 // execute code, and the app uses a few one-off layout styles.
@@ -23,7 +25,8 @@ header(
     . "img-src 'self' data:; media-src 'self' blob: data:; "
     . "style-src 'self' 'unsafe-inline'; script-src 'self'; "
     . "connect-src 'self' " . htmlspecialchars($apiBase, ENT_QUOTES) . "; "
-    . "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    . "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; "
+    . "upgrade-insecure-requests"
 );
 ?><!doctype html>
 <html lang="es">

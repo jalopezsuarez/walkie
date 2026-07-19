@@ -28,7 +28,8 @@ final class OAuthTokens
         $now = time();
 
         $access = Jwt::encode([
-            'iss'   => (string) Config::get('app.web_origin', 'walkie'),
+            'iss'   => self::issuer(),
+            'aud'   => self::issuer(),
             'sub'   => (string) $userId,
             'iat'   => $now,
             'exp'   => $now + $accessTtl,
@@ -49,10 +50,22 @@ final class OAuthTokens
     public static function userFromAccess(string $jwt): ?int
     {
         $claims = Jwt::decode($jwt, self::key());
-        if ($claims === null || !isset($claims['sub']) || !ctype_digit((string) $claims['sub'])) {
+        if ($claims === null) {
+            return null;
+        }
+        // Validate issuer + audience (RFC 7519 §4.1.1/4.1.3) and subject.
+        if (($claims['iss'] ?? null) !== self::issuer() || ($claims['aud'] ?? null) !== self::issuer()) {
+            return null;
+        }
+        if (!isset($claims['sub']) || !ctype_digit((string) $claims['sub'])) {
             return null;
         }
         return (int) $claims['sub'];
+    }
+
+    private static function issuer(): string
+    {
+        return (string) Config::get('app.web_origin', 'walkie');
     }
 
     /**
