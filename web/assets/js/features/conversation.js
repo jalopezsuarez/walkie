@@ -390,6 +390,7 @@
         catch (e) { src = 'data:' + (m.mime || 'audio/webm') + ';base64,' + m.audio; }
         var audio = new Audio(src);
         audio.preload = 'auto';
+        try { audio.load(); } catch (e) {}   // decode ahead so the first tap plays instantly
         var btn = el('button', { class: 'audio-play', html: W.ICON.play });
         var fill = el('div', { class: 'audio-fill' });
         var dur = el('span', { class: 'audio-dur', text: fmtDur(m.duration_ms) });
