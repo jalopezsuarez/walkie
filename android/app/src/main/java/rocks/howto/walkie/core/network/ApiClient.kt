@@ -28,6 +28,8 @@ fun buildOkHttp(tokenProvider: () -> String?): OkHttpClient =
         // Long-poll (?wait=1) holds the response up to ~18s server-side.
         .readTimeout(35, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
+        // Clears the host's anti-bot JS challenge (must wrap the auth header).
+        .addInterceptor(AntiBotInterceptor())
         .addInterceptor { chain ->
             val b = chain.request().newBuilder().header("Accept", "application/json")
             tokenProvider()?.let { b.header("Authorization", "Bearer $it") }
