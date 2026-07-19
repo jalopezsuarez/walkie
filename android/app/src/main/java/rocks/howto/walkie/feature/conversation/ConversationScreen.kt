@@ -80,10 +80,12 @@ fun ConversationScreen(linkId: Long, initialName: String, onBack: () -> Unit) {
     var confirmDelete by remember { mutableStateOf<Message?>(null) }
 
     Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize().background(walkieBackground()),
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             Row(
-                modifier = Modifier.fillMaxWidth().background(WalkieColors.AccentSoft).padding(horizontal = 8.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().background(WalkieColors.Glass).padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
@@ -113,7 +115,7 @@ fun ConversationScreen(linkId: Long, initialName: String, onBack: () -> Unit) {
     ) { pad ->
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().background(walkieBackground()).padding(pad).padding(horizontal = 10.dp),
+            modifier = Modifier.fillMaxSize().padding(pad).padding(horizontal = 10.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             item { Spacer(Modifier.size(6.dp)) }
@@ -220,7 +222,7 @@ private fun Composer(
     onRecordCancel: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().background(WalkieColors.Surface).padding(8.dp),
+        modifier = Modifier.fillMaxWidth().background(WalkieColors.Glass).padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextField(
@@ -234,8 +236,8 @@ private fun Composer(
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedContainerColor = WalkieColors.Bg,
-                unfocusedContainerColor = WalkieColors.Bg,
+                focusedContainerColor = WalkieColors.Surface,
+                unfocusedContainerColor = WalkieColors.Surface,
             ),
         )
         Spacer(Modifier.width(8.dp))

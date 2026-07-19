@@ -8,20 +8,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 
-/** Minimalist light palette mirroring the web app (pastel violet → blue). */
+/** Light palette mirroring the web app: vivid violet→cyan gradient, white
+ *  bubbles, petrol-teal interactive accent, violet reserved for the brand. */
 object WalkieColors {
     val Bg = Color(0xFFE9EEF2)
-    val GradientTop = Color(0xFFE7E1FB)
-    val GradientBottom = Color(0xFFDDE9F6)
-    val Accent = Color(0xFF7B6FD0)
-    val AccentSoft = Color(0xFFE2DCFB)
+    // Vivid diagonal gradient: magenta-violet (top-left) → sky-cyan (bottom-right)
+    val GradientTop = Color(0xFFCFA2E6)
+    val GradientMid = Color(0xFF9F9BEA)
+    val GradientBottom = Color(0xFF77CFE4)
+    val Brand = Color(0xFF7B6FD0)          // Walkie logo / identity only
+    val Accent = Color(0xFF3F8BA1)         // petrol teal — all interactive accents
+    val AccentSoft = Color(0xFFDCEAF0)     // soft teal tint
     val Surface = Color(0xFFFFFFFF)
-    val BubbleMine = Color(0xFFD9D2F6)
-    val BubbleTheirs = Color(0xFFFFFFFF)
+    val Glass = Color(0xB3FFFFFF)          // frosted white bars/headers
+    val BubbleMine = Color(0xFFFFFFFF)     // solid white
+    val BubbleTheirs = Color(0xADFFFFFF)   // frosted white
     val TextPrimary = Color(0xFF1B1B22)
-    val TextMuted = Color(0xFF8A8F98)
+    val TextMuted = Color(0xFF6D7B84)
     val Danger = Color(0xFFE5484D)
-    val CheckRead = Color(0xFF4C86D6)
+    val CheckRead = Color(0xFF3F8BA1)      // teal
 }
 
 private val LightScheme = lightColorScheme(

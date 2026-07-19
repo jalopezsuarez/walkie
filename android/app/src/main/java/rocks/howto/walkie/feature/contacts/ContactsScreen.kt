@@ -54,12 +54,21 @@ fun ContactsScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_brand),
-                contentDescription = null,
-                tint = WalkieColors.Accent,
-                modifier = Modifier.size(24.dp).padding(end = 7.dp),
-            )
+            Box(
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(WalkieColors.Glass),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_brand),
+                    contentDescription = null,
+                    tint = WalkieColors.Brand,
+                    modifier = Modifier.size(30.dp),
+                )
+            }
             Text("Walkie", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = WalkieColors.TextPrimary)
             Spacer(Modifier.weight(1f))
             Surface(
@@ -84,7 +93,7 @@ fun ContactsScreen(
                         Icon(
                             painter = painterResource(R.drawable.ic_brand),
                             contentDescription = null,
-                            tint = WalkieColors.Accent,
+                            tint = WalkieColors.Brand,
                             modifier = Modifier.size(72.dp),
                         )
                     }

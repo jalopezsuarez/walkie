@@ -10,16 +10,17 @@
     font-size: 18px;               /* global type scale — change to resize everything */
 
     --bg: #e9eef2;                 /* chat background */
-    --surface: #ffffff;            /* cards, incoming bubbles, bars */
+    --surface: #ffffff;            /* cards, bars */
     --surface-2: #f0f3f6;
     --line: #e2e7ec;
     --ink: #0f1720;
     --ink-2: #64727e;
     --ink-3: #9aa7b2;
-    --accent: #3390ec;             /* Telegram blue (actions) */
+    --accent: #3f8ba1;             /* petrol teal — all interactive accents */
     --accent-ink: #ffffff;
-    --brand: #7b6fd0;              /* Walkie brand violet (logo/identity) */
-    --bubble-out: #eeffde;         /* Telegram outgoing green */
+    --brand: #7b6fd0;              /* Walkie brand violet (logo/identity only) */
+    --bubble-out: #ffffff;         /* outgoing bubble: solid white */
+    --bubble-in: rgba(255,255,255,.66); /* incoming: frosted white */
     --danger: #e0533d;
     --radius: 1rem;
     --radius-lg: 1.5rem;
@@ -36,13 +37,13 @@ html, body {
     font: 1rem/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
 
-    /* soft diagonal pastel "mesh": violet -> periwinkle -> blue with glows */
-    background-color: #dfd9fb;
+    /* vivid diagonal gradient: magenta-violet (top-left) -> sky-cyan (bottom-right) */
+    background-color: #a99be8;
     background-image:
-        radial-gradient(120% 85% at 10% 6%, rgba(246,223,255,.95) 0%, rgba(246,223,255,0) 55%),
-        radial-gradient(120% 90% at 92% 96%, rgba(202,231,255,.95) 0%, rgba(202,231,255,0) 55%),
-        radial-gradient(90% 70% at 85% 8%, rgba(214,224,255,.7) 0%, rgba(214,224,255,0) 60%),
-        linear-gradient(135deg, #ecd7fb 0%, #d9ddff 50%, #cde9ff 100%);
+        radial-gradient(120% 90% at 6% 3%, rgba(228,166,224,.95) 0%, rgba(228,166,224,0) 55%),
+        radial-gradient(125% 95% at 97% 99%, rgba(116,207,228,.98) 0%, rgba(116,207,228,0) 55%),
+        radial-gradient(90% 70% at 88% 10%, rgba(150,182,240,.6) 0%, rgba(150,182,240,0) 60%),
+        linear-gradient(135deg, #cfa2e6 0%, #a99be8 40%, #7cb4e7 74%, #77cfe4 100%);
     background-attachment: fixed;
     background-repeat: no-repeat;
 }
@@ -174,9 +175,18 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 }
 .brand .logo svg { width: 2.1rem; height: 2.1rem; }
 
-/* Brand mark (secure-chat glyph) in the navbar and empty states */
-.topbar .brand-logo { display: inline-flex; align-items: center; color: var(--brand); margin-right: .1rem; }
-.topbar .brand-logo svg { width: 1.55rem; height: 1.55rem; }
+/* Brand mark (chat + padlock glyph) in the navbar and empty states.
+   Bigger, on the left, inside a soft frosted brand-tinted chip. */
+.topbar .brand-logo {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.9rem; height: 2.9rem; flex: none;
+    border-radius: 50%; color: var(--brand);
+    background: rgba(255,255,255,.55);
+    -webkit-backdrop-filter: saturate(150%) blur(10px); backdrop-filter: saturate(150%) blur(10px);
+    box-shadow: inset 0 0 0 1px rgba(123,111,208,.18);
+    margin-right: .15rem;
+}
+.topbar .brand-logo svg { width: 1.95rem; height: 1.95rem; }
 .empty .empty-logo { display: block; color: var(--brand); opacity: .5; margin: 0 auto .55rem; }
 .empty .empty-logo svg { width: 3.4rem; height: 3.4rem; }
 .brand h1 { margin: 0; font-size: 1.7rem; letter-spacing: -.02em; }
@@ -218,10 +228,10 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .unread-badge {
     flex: none; align-self: center;
     min-width: 1.6rem; height: 1.6rem; padding: 0 .45rem;
-    border-radius: 999px; background: #23c55e; color: #fff;
+    border-radius: 999px; background: var(--accent); color: #fff;
     font-size: .8rem; font-weight: 700;
     display: inline-flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 6px rgba(35,197,94,.4);
+    box-shadow: 0 2px 6px rgba(63,139,161,.45);
 }
 .contact.has-unread .name { font-weight: 700; }
 
@@ -258,7 +268,11 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
     line-height: 1.35;
 }
 .bubble.mine { align-self: flex-end; background: var(--bubble-out); border-bottom-right-radius: .35rem; }
-.bubble.theirs { align-self: flex-start; border-bottom-left-radius: .35rem; }
+.bubble.theirs {
+    align-self: flex-start; border-bottom-left-radius: .35rem;
+    background: var(--bubble-in);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
 .bubble.audio { cursor: pointer; }
 .bubble .btext { display: block; }
 .bubble .time { display: flex; align-items: center; justify-content: flex-end; gap: .2rem;

@@ -14,7 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -23,9 +25,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.ColorFilter
 
-/** Diagonal pastel gradient background used across full-screen surfaces. */
+/** Vivid diagonal gradient (violet → cyan) used across full-screen surfaces. */
 fun walkieBackground(): Brush = Brush.linearGradient(
-    colors = listOf(WalkieColors.GradientTop, WalkieColors.GradientBottom),
+    colors = listOf(WalkieColors.GradientTop, WalkieColors.GradientMid, WalkieColors.GradientBottom),
+    start = Offset.Zero,
+    end = Offset.Infinite,
 )
 
 @Composable
@@ -35,10 +39,10 @@ fun Avatar(name: String, size: Dp = 40.dp) {
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            .background(WalkieColors.AccentSoft),
+            .background(WalkieColors.Accent),
         contentAlignment = Alignment.Center,
     ) {
-        Text(initial, color = WalkieColors.Accent, fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.42f).sp)
+        Text(initial, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = (size.value * 0.42f).sp)
     }
 }
 

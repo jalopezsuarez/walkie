@@ -41,7 +41,7 @@ fun AuthScreen(onAuthed: () -> Unit) {
         Icon(
             painter = painterResource(R.drawable.ic_brand),
             contentDescription = null,
-            tint = WalkieColors.Accent,
+            tint = WalkieColors.Brand,
             modifier = Modifier.size(64.dp).padding(bottom = 12.dp),
         )
         Text("Walkie", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = WalkieColors.TextPrimary)
