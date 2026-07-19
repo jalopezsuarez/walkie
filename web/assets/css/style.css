@@ -179,14 +179,14 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
    Bigger, on the left, inside a soft frosted brand-tinted chip. */
 .topbar .brand-logo {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 2.9rem; height: 2.9rem; flex: none;
+    width: 3.1rem; height: 3.1rem; flex: none;
     border-radius: 50%; color: var(--brand);
     background: rgba(255,255,255,.55);
     -webkit-backdrop-filter: saturate(150%) blur(10px); backdrop-filter: saturate(150%) blur(10px);
     box-shadow: inset 0 0 0 1px rgba(123,111,208,.18);
-    margin-right: .15rem;
+    margin-right: .25rem;
 }
-.topbar .brand-logo svg { width: 1.95rem; height: 1.95rem; }
+.topbar .brand-logo svg { width: 2.45rem; height: 2.45rem; }
 .empty .empty-logo { display: block; color: var(--brand); opacity: .5; margin: 0 auto .55rem; }
 .empty .empty-logo svg { width: 3.4rem; height: 3.4rem; }
 .brand h1 { margin: 0; font-size: 1.7rem; letter-spacing: -.02em; }
