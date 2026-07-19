@@ -1,9 +1,9 @@
 name: Build Android APK (native)
 
-# Compiles the native Kotlin app in android/ and publishes a debug APK to a
-# GitHub Release. Debug builds are signed with the standard debug key, so they
-# install via "unknown sources" — no secrets or Firebase config required to
-# build (FCM just stays inert until google-services.json is added).
+# Compiles the native Kotlin app in android/ and publishes a signed release
+# APK to a GitHub Release. Signs with the ANDROID_KEYSTORE_BASE64 repo secret
+# (production key) when present, otherwise an ephemeral key. The "Verify APK
+# signature" step prints the signer certificate SHA-256 for confirmation.
 
 on:
   workflow_dispatch:
