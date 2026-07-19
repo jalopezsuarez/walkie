@@ -37,7 +37,10 @@ In the InfinityFree control panel (MySQL Databases) you already have:
 | User | `if0_42263887` |
 | Password | *(your MySQL password)* |
 
-Open **phpMyAdmin** for that database and **import** `api/migrations/schema.sql`.
+Open **phpMyAdmin** for that database and **import** `api/migrations/schema.sql`
+(or run `api/install.php` once — §Fast path). The schema includes `users`,
+`login_codes`, `oauth_refresh_tokens`, `pairing_tokens`, `links`, `messages`,
+`devices` (FCM tokens) and `rate_limits`.
 
 ## 2. Backend config
 
@@ -62,6 +65,26 @@ Edit `api/config/config.php`:
   land in `api/storage/mail.log` instead of being emailed).
 
 `app.url` / `app.web_origin` are already set to the production URLs.
+
+### Push notifications (FCM) — optional, for the Android app
+
+To let the API send push on new messages:
+
+1. In Firebase, create a **service-account** key (JSON) for the project.
+2. Upload it to **`api/config/service-account.json`** on the server. That folder
+   is already protected by `.htaccess` (`Require all denied`); keep the file
+   **out of git**.
+3. In `api/config/config.php`, point `fcm.credentials` at it:
+   ```php
+   'fcm' => ['credentials' => __DIR__ . '/service-account.json'],
+   ```
+4. Make sure `api/storage/` is writable — the Google access token is cached in
+   `storage/fcm_token.json`.
+
+If `fcm.credentials` is absent, push is simply skipped (`Fcm::enabled()` is
+`false`) and the app still receives messages via foreground long-poll.
+InfinityFree is confirmed to allow outbound HTTPS to Google, so no external
+relay is needed.
 
 ## 3. Frontend config
 

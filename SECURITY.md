@@ -54,9 +54,18 @@ two-tap experience.
 - **Messages**: AES-256-GCM, with a **per-conversation key derived via HKDF**;
   the server stores only ciphertext (+ nonce/tag). A single key's blast radius
   is one conversation.
-- **Secrets**: login codes and refresh tokens stored as SHA-256 hashes only.
+- **Secrets**: login codes, refresh tokens and FCM device tokens stored as
+  SHA-256 hashes only.
 - **`app.key`** (32 random bytes) signs JWTs and seeds key derivation; kept in
   server config, never in the repo.
+
+## Push notifications (FCM) — data minimisation
+
+- Push is sent server-side via **FCM HTTP v1** (service-account RS256 JWT →
+  Google token → `messages:send`); credentials live only in server config.
+- Payloads carry **only the sender's display name**, a type marker
+  (new message / voice note) and the `link_id` — **never message content**.
+  Message bodies remain encrypted at rest and are never placed in a push.
 
 ## Input handling & abuse control
 
@@ -79,11 +88,19 @@ two-tap experience.
 
 ## Build & release integrity
 
-- Android release APKs are **signed** (stable keystore via the
-  `ANDROID_KEYSTORE_BASE64` CI secret; ephemeral fallback otherwise). Keystore
-  and passwords are never committed. See [android/README](android/README.md#firma-del-apk).
-- No secrets in the repo: `config.php`, `google-services.json` and keystores
-  are git-ignored.
+- Android release APKs are **signed with the production keystore**, loaded from
+  the repository CI secrets `ANDROID_KEYSTORE_BASE64` / `…_PASSWORD` /
+  `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD`. Configured and verified — the
+  signer certificate is stable, enabling in-place updates. If the secrets were
+  ever missing, the workflow falls back to an ephemeral key and emits a warning;
+  the "Verify APK signature" step prints the certificate SHA-256 either way.
+  Keystore and passwords are never committed. See
+  [android/README](android/README.md#firma-del-apk).
+- **Secrets never in the repo:** `api/config/config.php`, the FCM service-account
+  key (`api/config/service-account.json`, also blocked by `.htaccess`) and the
+  signing keystore are all git-ignored. `android/app/google-services.json` *is*
+  committed on purpose — Google classifies it as a client identifier, not a
+  secret (it contains no private key; server auth uses the service account).
 
 ## Deliberate trade-offs
 

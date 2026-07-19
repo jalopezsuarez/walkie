@@ -8,8 +8,11 @@ Notificaciones **oficiales de Google (FCM)**.
 - **Lenguaje:** Kotlin puro
 - **UI:** Jetpack Compose + Material 3 (tema claro tipo Telegram, degradado pastel)
 - **Arquitectura:** *vertical slice* (una carpeta por funcionalidad)
-- **Mínimo:** Android 11 (API 30). Objetivo: API 35
+- **Mínimo:** Android 10 (API 29) — ~cobertura alta y mantiene la grabación OGG/Opus. Compile/target: API 35
 - **Dependencias:** mínimas (OkHttp, kotlinx-serialization, DataStore, ZXing, Firebase Messaging)
+- **Icono de marca:** burbuja de chat de línea con tres puntos + candado (mismo
+  glifo que la web), como *vector drawables* tintables (launcher, notificación,
+  navbar, pantalla de login y estado vacío).
 
 ---
 
@@ -20,7 +23,8 @@ app/src/main/java/rocks/howto/walkie/
 ├─ WalkieApp.kt            · Application + grafo de dependencias (DI manual)
 ├─ MainActivity.kt         · Host Compose + permiso de notificaciones
 ├─ core/
-│  ├─ network/             · WalkieApi (todos los endpoints), DTOs, OkHttp
+│  ├─ network/             · WalkieApi (todos los endpoints), DTOs, OkHttp,
+│  │                         AntiBotInterceptor (reto JS de InfinityFree)
 │  ├─ data/                · SessionStore (tokens OAuth2 + usuario en DataStore)
 │  ├─ audio/               · AudioRecorder (OGG/Opus) + AudioPlayer
 │  ├─ designsystem/        · Tema, colores, componentes (Avatar, Checks…)
@@ -51,6 +55,7 @@ Todo pasa por `core/network/WalkieApi.kt`, fiel al backend PHP:
 | Pairing | `POST /link/qr`, `POST /link/claim` |
 | Contactos | `GET /links`, `DELETE /links/{id}` |
 | Conversación | `GET /links/{id}/messages?after=&wait=1`, `POST …/messages`, `DELETE …/messages/{id}`, `GET …/statuses`, `POST …/read` |
+| Push | `POST /devices` (registra el token FCM del dispositivo) |
 
 **Tiempo real:** long-polling (`?wait=1`), igual que la web — sin WebSockets.
 Con la app abierta, los mensajes llegan casi al instante.
@@ -58,35 +63,52 @@ Con la app abierta, los mensajes llegan casi al instante.
 **Audio:** se graba en **OGG/Opus** (el mismo códec del navegador), así la web
 reproduce las notas sin transcodificar, y viceversa.
 
+**Reto anti-bot de InfinityFree.** El hosting protege el sitio con un desafío
+JavaScript (AES/`__test` cookie) que bloquea a los clientes que no son
+navegador (incluido OkHttp) — por eso al principio *no llegaba el código por
+email* desde la app. `core/network/AntiBotInterceptor.kt` resuelve el reto
+(descifra `a,b,c` con AES-128-CBC, fija la cookie `__test` y reintenta), de
+forma transparente para el resto de la app. Es lo primero en la cadena de
+interceptores, antes del de autenticación.
+
 ---
 
-## Notificaciones push (FCM) — pasos
+## Notificaciones push (FCM) — operativo
 
-El **lado cliente está completo** (servicio, registro de token, canal,
-notificación). Faltan dos cosas para que Google entregue push:
+Push oficial de Google (**FCM HTTP v1**) de extremo a extremo. Cliente y
+servidor completos:
 
-### 1. Firebase (config del proyecto)
-1. Crea un proyecto en [Firebase Console](https://console.firebase.google.com/) y añade una app Android con `applicationId = rocks.howto.walkie`.
-2. Descarga `google-services.json` y ponlo en `android/app/google-services.json` (hay una plantilla en `google-services.json.example`).
-3. El plugin de Google Services se activa solo cuando ese archivo existe.
+**Cliente (esta app)**
+- `messaging/` — servicio FCM, registro del token (`POST /devices`), canal de
+  notificación e icono `ic_notification`.
+- El token se registra al iniciar sesión y en cada `onNewToken`.
 
-### 2. Backend TODO (2 endpoints en la API PHP)
-Para que el servidor pueda notificar, hay que añadir a la API:
+**Servidor (API PHP)** — ya implementado, ver [`../api`](../api/README.md):
+- **`POST /devices`** (`Features/Push/RegisterDevice`) guarda el hash del token
+  FCM en la tabla `devices`.
+- Al enviar un mensaje, `Features/Messages/SendMessage` llama a
+  `Shared/Fcm` y notifica al destinatario por FCM HTTP v1 (JWT RS256 de cuenta
+  de servicio → `oauth2.googleapis.com` → `fcm.googleapis.com/v1/.../messages:send`),
+  **después** de responder al cliente (`fastcgi_finish_request`).
+- **Privacidad:** el push lleva solo el **nombre del remitente** y un tipo
+  (`💬 Nuevo mensaje` / `🎤 Nota de voz`) + `link_id` — **nunca el contenido**.
 
-- **`POST /devices`** — guarda el token FCM del dispositivo del usuario.
-  El cliente ya lo llama (`WalkieApi.registerDevice`); hoy falla en silencio.
-- **Envío a FCM al recibir mensaje** — en `SendMessage`, tras guardar el
-  mensaje, enviar un push (FCM HTTP v1) al token del destinatario con
-  `{ title, body, link_id }`.
+### Configuración Firebase
+1. Proyecto en [Firebase Console](https://console.firebase.google.com/) (aquí:
+   `walkie-e881f`) con una app Android `applicationId = rocks.howto.walkie`.
+2. `google-services.json` va en `android/app/` (se incluye en el repo: Google lo
+   considera identificador de cliente, no secreto). El plugin de Google Services
+   se activa solo cuando el archivo existe.
+3. En el servidor, la clave de **cuenta de servicio** (`service-account.json`)
+   se coloca en `api/config/` (protegida por `.htaccess`, **fuera de git**) y se
+   referencia en `config.php` (`fcm.credentials`). Ver [DEPLOY.md](../DEPLOY.md).
 
-> ⚠️ El envío exige que el servidor haga **HTTPS saliente a `fcm.googleapis.com`**.
-> Si InfinityFree bloquea la salida (lo estábamos comprobando con `probe.php`),
-> el envío hay que hacerlo desde un **Cloudflare Worker** gratuito que actúe de
-> relé. El registro (`POST /devices`) sí puede vivir en la API.
+> **Salida de InfinityFree:** verificado que el hosting **sí permite HTTPS
+> saliente** a Google (intercambio de token HTTP 200 y `messages:send`
+> respondiendo). No hace falta relé externo.
 
-Mientras esto no esté, la app funciona con **long-poll en primer plano**
-(avisos con la app abierta); el push en segundo plano llega cuando el backend
-esté listo.
+Con la app abierta también funciona el **long-poll en primer plano**; el push
+cubre el segundo plano.
 
 ---
 
@@ -112,10 +134,17 @@ La firma de release lee un keystore desde variables de entorno (CI) o
 `gradle.properties` (local): `walkie.keystore`, `walkie.keystorePassword`,
 `walkie.keyAlias`, `walkie.keyPassword`.
 
-En CI, si defines el *secret* `ANDROID_KEYSTORE_BASE64` (+ `…_PASSWORD`,
-`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`) se firma con **tu** keystore
-(actualizaciones limpias en el dispositivo). Si no, se firma con una clave
-**efímera** por build (instala, pero para actualizar hay que desinstalar).
+En CI se firma con el keystore de **producción**, cargado desde los *secrets*
+de repositorio `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS` y `ANDROID_KEY_PASSWORD`. **Configurado y verificado**: el
+certificado de firma es estable (`7c3abcaa…`), lo que permite actualizaciones
+*in-place* sin desinstalar. Si algún día faltaran los secrets, el workflow cae a
+una clave **efímera** por build (avisa con un `::warning::` y el paso "Verify
+APK signature" imprime el certificado, para detectarlo).
+
+> Los *secrets* deben estar a nivel **Repository** (Settings → Secrets and
+> variables → Actions), no como *Environment secrets*: el workflow no declara
+> `environment:` y no vería estos últimos.
 
 Crear un keystore estable una vez y cargarlo como secret:
 
@@ -149,9 +178,9 @@ publicar actualizaciones de la app.
   haría falta otra app (Swift) o seguir con la PWA.
 - **Mantenimiento duplicado**: dos frontends (web + Android) que evolucionan en
   paralelo cuando cambia la API o el diseño.
-- **Requiere Firebase** (cuenta Google + `google-services.json`) y, para el
-  envío, tocar el backend (2 endpoints) y quizá un Worker por el bloqueo de
-  salida de InfinityFree.
+- **Requiere Firebase** (cuenta Google + `google-services.json` + cuenta de
+  servicio en el backend). Ya integrado y funcionando; el envío corre en la
+  propia API (InfinityFree permite la salida HTTPS a Google, sin relé externo).
 - **Ciclo de release** más pesado que subir archivos a un hosting: compilar,
   firmar, publicar APK.
 - **Tamaño**: un APK (~8–12 MB) frente a “cero instalación” de la web.

@@ -28,7 +28,7 @@ web/
 ├── manifest.webmanifest   # PWA (icono, colores, standalone)
 └── assets/
     ├── css/style.css      # todo el sistema de diseño (tema claro, degradado)
-    ├── icons/             # iconos PWA (192/512/180)
+    ├── icons/             # marca: favicon.svg, logo.svg + PNG PWA (192/512/180)
     └── js/
         ├── api.js         # cliente de la API (fetch + bearer token)
         ├── core.js        # estado, helpers DOM, overlay, iconos SVG
@@ -52,8 +52,12 @@ Añadir una función = añadir un archivo en `features/` y registrarlo en
 ## Cómo habla con la API
 
 - Cliente en `assets/js/api.js`; base URL desde `document.body.dataset.api`.
-- Autenticación por **token Bearer** (`Authorization: Bearer …`) guardado en
-  `localStorage`. Un `401` limpia la sesión.
+- Autenticación **OAuth 2.0**: el login canjea email + código en `/oauth/token`
+  y guarda `access_token` (JWT) + `refresh_token` en `localStorage`. Las
+  peticiones van con `Authorization: Bearer <JWT>`; ante un `401` el cliente
+  **renueva** con el refresh token (grant `refresh_token`, con rotación) y
+  reintenta una vez; si la renovación falla, limpia la sesión. `logout` revoca
+  el refresh token (`/oauth/revoke`).
 - **Tiempo real** por *long-polling* (`GET /links/{id}/messages?wait=1`): la
   petición se mantiene abierta hasta que llega un mensaje nuevo o expira el
   tiempo — casi instantáneo, sin WebSockets.
@@ -73,8 +77,9 @@ Añadir una función = añadir un archivo en `features/` y registrarlo en
 - `manifest.webmanifest` permite "Añadir a inicio" (imprescindible para push en
   iOS 16.4+).
 - `notify.js` usa la API de Notificaciones del navegador (avisos en primer
-  plano). El push en segundo plano requiere Service Worker + Web Push (pendiente
-  en backend; ver README raíz).
+  plano). El push **en segundo plano** en web requeriría Service Worker + Web
+  Push (no implementado). Para segundo plano fiable está la **app Android con
+  FCM** (ver [`../android`](../android/README.md)); web y Android comparten API.
 
 ## Configuración
 

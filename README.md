@@ -58,6 +58,8 @@ Guía de despliegue paso a paso: **[DEPLOY.md](DEPLOY.md)**.
 - **Borrado por el emisor** en cualquier momento, sin rastro.
 - **Retención automática** — audio 1 h, texto 24 h.
 - **Checks de entrega y lectura** (un check / doble check).
+- **Push oficial (FCM)** en Android — solo avisa del remitente, nunca del
+  contenido; en web, avisos en primer plano.
 
 ## Arquitectura
 
@@ -93,5 +95,7 @@ completo (API + navegador) están verificados contra infraestructura real.
 
 ## Créditos
 
-- Icono de marca ("secure chat"): diseño propio inspirado en **Secure chat by
-  Gem Designs** del [Noun Project](https://thenounproject.com/browse/icons/term/secure-chat/) (CC BY 3.0).
+- Icono de marca: burbuja de chat de línea con tres puntos y candado, basado en
+  un glifo libre de [SVG Repo](https://www.svgrepo.com/). Se usa de forma
+  uniforme y tintable en web y Android (favicon, logo, navbar, estados vacíos,
+  launcher y notificación).

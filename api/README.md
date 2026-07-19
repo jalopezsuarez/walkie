@@ -34,7 +34,7 @@ api/
 │   │                       #   Validator, ApiException, Autoloader
 │   ├── Shared/             # infra transversal: Crypto, Jwt, OAuthTokens, Session,
 │   │                       #   UserAccount, LoginCode, RateLimiter, SmtpClient,
-│   │                       #   Mailer, QrCode, Cleanup
+│   │                       #   Mailer, QrCode, Fcm, Cleanup
 │   └── Features/           # un slice por carpeta, una clase por endpoint
 │       ├── Health/         #   GetHealth
 │       ├── Auth/           #   RequestLoginCode
@@ -42,6 +42,7 @@ api/
 │       ├── Profile/        #   GetProfile, UpdateProfile
 │       ├── Pairing/        #   CreatePairingQr, ClaimPairing
 │       ├── Contacts/       #   ListContacts, RemoveContact
+│       ├── Push/           #   RegisterDevice (POST /devices)
 │       └── Messages/       #   ListMessages, SendMessage, DeleteMessage,
 │                           #   MessageStatuses, MarkRead, Conversation
 └── tests/                  # verificador de QR + E2E de API y navegador
@@ -68,6 +69,7 @@ El contrato autoritativo está en [`openapi.yaml`](openapi.yaml).
 | DELETE | `/links/{id}/messages/{msgId}` | Borrar un mensaje propio |
 | GET | `/links/{id}/statuses` | Estados de entrega/lectura |
 | POST | `/links/{id}/read` | Marcar como leídos |
+| POST | `/devices` | Registrar el token FCM del dispositivo (push) |
 
 ## Autenticación — OAuth 2.0 (oficial y estándar)
 
@@ -105,6 +107,30 @@ curl -X POST /api/oauth/token \
 #     "refresh_token":"…", "scope":"walkie" }
 curl /api/me -H "Authorization: Bearer <JWT>"
 ```
+
+## Notificaciones push (FCM HTTP v1)
+
+Push oficial de Google para la app Android, todo desde la propia API:
+
+- **`POST /devices`** (`Features/Push/RegisterDevice`) guarda el token FCM del
+  dispositivo (como hash) en la tabla `devices`, asociado al usuario.
+- Al enviar un mensaje, `Features/Messages/SendMessage` invoca `Shared/Fcm`
+  **después** de responder al cliente (`fastcgi_finish_request`), así el envío
+  del push no añade latencia. `Fcm` firma un JWT RS256 de **cuenta de servicio**,
+  lo canjea en `oauth2.googleapis.com` y hace `POST` a
+  `fcm.googleapis.com/v1/projects/<proj>/messages:send`.
+- **Privacidad:** el push transporta solo el **nombre del remitente** y el tipo
+  (`💬 Nuevo mensaje` / `🎤 Nota de voz`) + `link_id`; **nunca** el contenido del
+  mensaje (que además va cifrado en reposo).
+- **Configuración:** `config.php` referencia la clave de cuenta de servicio en
+  `fcm.credentials` (p. ej. `__DIR__ . '/service-account.json'`). Si no está
+  configurada, `Fcm::enabled()` es `false` y el envío se omite silenciosamente
+  (la app sigue recibiendo por long-poll en primer plano). El `service-account.json`
+  vive en `config/`, protegido por `.htaccess` y **fuera de git**. Ver
+  [DEPLOY.md](../DEPLOY.md).
+
+> El token de acceso de Google se cachea en `storage/fcm_token.json` hasta que
+> expira. Verificado que InfinityFree permite la salida HTTPS a Google.
 
 ## Seguridad
 
