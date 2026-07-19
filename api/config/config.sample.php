@@ -80,4 +80,12 @@ return [
         'refresh_ttl' => 60 * 60 * 24 * 30,  // refresh token lifetime: 30 days
         'jwt_key'     => '',                 // HS256 key; empty = reuse app.key
     ],
+
+    // Push notifications (Firebase Cloud Messaging, HTTP v1). Optional — leave
+    // 'credentials' empty to disable. Point it at your Firebase service-account
+    // JSON (keep the file OUTSIDE the web root).
+    'fcm' => [
+        'credentials' => '',   // e.g. __DIR__ . '/service-account.json'
+        'project_id'  => '',   // optional; taken from the JSON if present
+    ],
 ];

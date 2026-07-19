@@ -9,6 +9,7 @@ use Walkie\Kernel\Database;
 use Walkie\Kernel\Request;
 use Walkie\Kernel\Response;
 use Walkie\Shared\Crypto;
+use Walkie\Shared\Fcm;
 use Walkie\Shared\RateLimiter;
 use Walkie\Shared\Session;
 
@@ -27,14 +28,15 @@ final class SendMessage
 
         $type = $req->input('type');
         match ($type) {
-            'text'  => self::text($req, $link, $user['id']),
-            'audio' => self::audio($req, $link, $user['id']),
+            'text'  => self::text($req, $link, $user),
+            'audio' => self::audio($req, $link, $user),
             default => throw ApiException::badRequest('type must be "text" or "audio"', 'invalid_type'),
         };
     }
 
-    private static function text(Request $req, array $link, int $userId): void
+    private static function text(Request $req, array $link, array $user): void
     {
+        $userId = $user['id'];
         $text = $req->input('text');
         $maxLen = (int) Config::get('upload.max_text_len', 4000);
         if (!is_string($text) || trim($text) === '') {
@@ -46,10 +48,12 @@ final class SendMessage
 
         $id = self::store($link, $userId, 't', $text, (int) Config::get('ttl.text_msg', 86400));
         Response::json(['id' => $id, 'type' => 'text'], 201);
+        self::pushToRecipient($link, $user, '💬 Nuevo mensaje');
     }
 
-    private static function audio(Request $req, array $link, int $userId): void
+    private static function audio(Request $req, array $link, array $user): void
     {
+        $userId = $user['id'];
         $b64 = $req->input('audio');
         if (!is_string($b64) || $b64 === '') {
             throw ApiException::badRequest('Missing audio data', 'empty_audio');
@@ -74,6 +78,31 @@ final class SendMessage
             (int) Config::get('ttl.audio_msg', 3600), $mime, $duration
         );
         Response::json(['id' => $id, 'type' => 'audio'], 201);
+        self::pushToRecipient($link, $user, '🎤 Nota de voz');
+    }
+
+    /**
+     * Best-effort push to the other user's devices. Runs after the response is
+     * flushed so it never slows down sending. Carries only the sender's name.
+     */
+    private static function pushToRecipient(array $link, array $sender, string $body): void
+    {
+        if (!Fcm::enabled()) {
+            return;
+        }
+        if (function_exists('fastcgi_finish_request')) {
+            @fastcgi_finish_request();
+        }
+        try {
+            $stmt = Database::pdo()->prepare('SELECT token FROM devices WHERE user_id = ?');
+            $stmt->execute([$link['other_id']]);
+            $title = ($sender['display_name'] ?? '') !== '' ? $sender['display_name'] : 'Walkie';
+            foreach ($stmt->fetchAll(\PDO::FETCH_COLUMN) as $token) {
+                Fcm::send((string) $token, $title, $body, ['link_id' => (string) $link['id']]);
+            }
+        } catch (\Throwable $e) {
+            // best effort — never affect message delivery
+        }
     }
 
     private static function store(
