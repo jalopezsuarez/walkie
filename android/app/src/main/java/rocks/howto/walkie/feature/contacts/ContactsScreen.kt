@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import rocks.howto.walkie.core.designsystem.Avatar
@@ -75,10 +76,24 @@ fun ContactsScreen(
 
         if (vm.contacts.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    if (vm.loading) "Cargando…" else "Aún no tienes contactos.\nPulsa Invitar para vincular.",
-                    color = WalkieColors.TextMuted,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    if (!vm.loading) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_brand),
+                            contentDescription = null,
+                            tint = WalkieColors.Accent,
+                            modifier = Modifier.size(72.dp),
+                        )
+                    }
+                    Text(
+                        if (vm.loading) "Cargando…" else "Aún no tienes contactos.\nPulsa Invitar para vincular.",
+                        color = WalkieColors.TextMuted,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         } else {
             LazyColumn(Modifier.fillMaxSize()) {
