@@ -27,6 +27,7 @@ use Walkie\Features\Messages\MessageStatuses;
 use Walkie\Features\Messages\SendMessage;
 use Walkie\Features\OAuth\RevokeEndpoint;
 use Walkie\Features\OAuth\TokenEndpoint;
+use Walkie\Features\Push\RegisterDevice;
 use Walkie\Features\Pairing\ClaimPairing;
 use Walkie\Features\Pairing\CreatePairingQr;
 use Walkie\Features\Profile\GetProfile;
@@ -98,6 +99,9 @@ $router->post('/oauth/revoke',      [RevokeEndpoint::class, 'handle']);
 
 $router->get('/me',   [GetProfile::class, 'handle']);
 $router->patch('/me', [UpdateProfile::class, 'handle']);
+
+// Push notifications: register this device's FCM token.
+$router->post('/devices', [RegisterDevice::class, 'handle']);
 
 $router->post('/link/qr',    [CreatePairingQr::class, 'handle']);
 $router->post('/link/claim', [ClaimPairing::class, 'handle']);

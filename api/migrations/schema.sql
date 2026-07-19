@@ -130,3 +130,19 @@ CREATE TABLE IF NOT EXISTS oauth_refresh_tokens (
     KEY idx_oauth_refresh_user (user_id),
     KEY idx_oauth_refresh_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+--  Push devices (FCM registration tokens; token stored + hashed for lookup)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS devices (
+    id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id       BIGINT UNSIGNED NOT NULL,
+    token         TEXT            NOT NULL,
+    token_hash    CHAR(64)        NOT NULL,
+    platform      VARCHAR(16)     NOT NULL DEFAULT 'android',
+    created_at    DATETIME        NOT NULL,
+    updated_at    DATETIME        NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_devices_token (token_hash),
+    KEY idx_devices_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -226,6 +226,24 @@ paths:
         '400': { description: Validation error / email taken }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /devices:
+    post:
+      summary: Register this device's push (FCM) token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string, description: FCM registration token }
+                platform: { type: string, enum: [android, ios, web], default: android }
+      responses:
+        '200': { description: Registered }
+        '400': { description: Missing or invalid token }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /link/qr:
     post:
       summary: Create a pairing QR (full-screen scan target)
