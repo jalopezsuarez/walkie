@@ -56,7 +56,7 @@ fun ContactsScreen(
             Box(
                 modifier = Modifier
                     .padding(end = 9.dp)
-                    .size(38.dp)
+                    .size(46.dp)
                     .clip(CircleShape)
                     .background(WalkieColors.Glass),
                 contentAlignment = Alignment.Center,
@@ -65,7 +65,7 @@ fun ContactsScreen(
                     painter = painterResource(R.drawable.ic_brand),
                     contentDescription = null,
                     tint = WalkieColors.Brand,
-                    modifier = Modifier.size(27.dp),
+                    modifier = Modifier.size(26.dp),
                 )
             }
             Text("Walkie", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = WalkieColors.TextPrimary)
