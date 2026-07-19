@@ -29,8 +29,8 @@ android {
         applicationId = "rocks.howto.walkie"
         minSdk = 29            // Android 10 — ~78% device reach, keeps OGG/Opus recording
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         buildConfigField("String", "API_BASE", "\"$apiBase\"")
     }
 

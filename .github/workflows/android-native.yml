@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version name (e.g. 1.0.0)"
+        description: "Version name (e.g. 1.0.1)"
         required: false
-        default: "1.0.0"
+        default: "1.0.1"
   push:
     branches:
       - main
@@ -46,7 +46,7 @@ jobs:
       - name: Build signed release APK
         working-directory: android
         env:
-          VERSION_NAME: ${{ github.event.inputs.version || '1.0.0' }}
+          VERSION_NAME: ${{ github.event.inputs.version || '1.0.1' }}
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
@@ -98,8 +98,9 @@ jobs:
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: android-v${{ github.event.inputs.version || '1.0.0' }}-${{ github.run_number }}
-          name: Walkie Android ${{ github.event.inputs.version || '1.0.0' }}
+          tag_name: android-v${{ github.event.inputs.version || '1.0.1' }}-${{ github.run_number }}
+          name: Walkie Android ${{ github.event.inputs.version || '1.0.1' }}
+          make_latest: true
           body: |
             APK nativo (release, firmado) de Walkie para Android.
 
