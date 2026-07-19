@@ -13,8 +13,11 @@ on:
         required: false
         default: "1.0.0"
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
+    paths:
+      - "android/**"
+      - ".github/workflows/android-apk.yml"
 
 permissions:
   contents: write
