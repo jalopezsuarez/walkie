@@ -9,5 +9,5 @@
 .cxx
 local.properties
 /app/build/
-# Firebase config is per-project; add your own (see README).
-/app/google-services.json
+# Firebase google-services.json is committed (not a secret — see Google docs);
+# the service-account key is NOT (server-side only).

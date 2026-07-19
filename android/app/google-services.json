@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "531446557122",
+    "project_id": "walkie-e881f",
+    "storage_bucket": "walkie-e881f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531446557122:android:45cf4695f0885d56cb8e5b",
+        "android_client_info": {
+          "package_name": "rocks.howto.walkie"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA49LEUWcjjsYj67zxgHoU4YyqCShZQ_BU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
