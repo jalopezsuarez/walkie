@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,7 +32,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -200,13 +201,22 @@ private fun AudioContent(playing: Boolean, progress: Float, durationMs: Long) {
             )
         }
         Column(Modifier.padding(start = 10.dp).weight(1f)) {
-            LinearProgressIndicator(
-                progress = { if (playing) progress else 0f },
-                modifier = Modifier.fillMaxWidth(),
-                color = WalkieColors.Accent,
-                trackColor = WalkieColors.AccentSoft,
-            )
-            Text(formatDur(durationMs), color = WalkieColors.TextMuted, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(WalkieColors.AccentSoft),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(if (playing) progress.coerceIn(0f, 1f) else 0f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(WalkieColors.Accent),
+                )
+            }
+            Text(formatDur(durationMs), color = WalkieColors.TextMuted, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp))
         }
     }
 }

@@ -147,7 +147,7 @@ class ConversationViewModel(
 
     fun togglePlay(m: Message) {
         if (m.type != "audio") return
-        player.toggle(m.id, m.audio)
+        player.toggle(m.id, m.audio, m.mime)
     }
 
     fun delete(m: Message) {

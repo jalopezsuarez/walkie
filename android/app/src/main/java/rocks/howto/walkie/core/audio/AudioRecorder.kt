@@ -7,12 +7,13 @@ import android.os.SystemClock
 import java.io.File
 
 /**
- * Records short voice notes as OGG/Opus — the same codec browsers use, so the
- * web client plays them without transcoding. Requires API 29+ (we target 30+).
+ * Records short voice notes as AAC in an MP4/M4A container. AAC plays reliably
+ * on every Android MediaPlayer (OGG/Opus playback is flaky on many OEMs) and in
+ * all browsers, so the web client plays these notes without transcoding.
  */
 class AudioRecorder(private val context: Context) {
 
-    val mime: String = "audio/ogg"
+    val mime: String = "audio/mp4"
 
     private var recorder: MediaRecorder? = null
     private var file: File? = null
@@ -23,14 +24,14 @@ class AudioRecorder(private val context: Context) {
     @Suppress("DEPRECATION")
     fun start(): Boolean {
         releaseQuietly()
-        val out = File(context.cacheDir, "rec_${System.currentTimeMillis()}.ogg")
+        val out = File(context.cacheDir, "rec_${System.currentTimeMillis()}.m4a")
         val r = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) MediaRecorder(context) else MediaRecorder()
         return runCatching {
             r.setAudioSource(MediaRecorder.AudioSource.MIC)
-            r.setOutputFormat(MediaRecorder.OutputFormat.OGG)
-            r.setAudioEncoder(MediaRecorder.AudioEncoder.OPUS)
-            r.setAudioSamplingRate(48_000)
-            r.setAudioEncodingBitRate(24_000)
+            r.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            r.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            r.setAudioSamplingRate(44_100)
+            r.setAudioEncodingBitRate(64_000)
             r.setOutputFile(out.absolutePath)
             r.prepare()
             r.start()

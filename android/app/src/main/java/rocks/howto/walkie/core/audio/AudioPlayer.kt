@@ -1,5 +1,6 @@
 package rocks.howto.walkie.core.audio
 
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.util.Base64
 import kotlinx.coroutines.CoroutineScope
@@ -32,29 +33,47 @@ class AudioPlayer(private val cacheDir: File) {
     val progress: StateFlow<Float> = _progress.asStateFlow()
 
     /** Toggle playback for [id]; tapping a playing note pauses/stops it. */
-    fun toggle(id: Long, base64: String?, filePath: String? = null) {
+    fun toggle(id: Long, base64: String?, mime: String? = null, filePath: String? = null) {
         if (_playing.value == id) { stop(); return }
         stop()
-        val src = filePath?.let { File(it) } ?: base64?.let { cachedFile(id, it) } ?: return
+        val src = filePath?.let { File(it) } ?: base64?.let { cachedFile(id, it, mime) } ?: return
         val mp = MediaPlayer()
         runCatching {
-            mp.setDataSource(src.absolutePath)
+            mp.setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build()
+            )
+            mp.setOnErrorListener { _, _, _ -> stop(); true }
             mp.setOnCompletionListener { stop() }
             mp.setOnPreparedListener {
                 it.start()
                 _playing.value = id
                 startTicker(it)
             }
+            mp.setDataSource(src.absolutePath)
             mp.prepareAsync()
             player = mp
-        }.onFailure { mp.release() }
+        }.onFailure { mp.release(); _playing.value = null }
     }
 
-    private fun cachedFile(id: Long, base64: String): File? = files.getOrPut(id) {
-        val f = File(cacheDir, "play_$id.audio")
+    /** Cache the decoded bytes to a file with a real extension so every OEM's
+     *  extractor picks the right demuxer (Opus/OGG, Opus/WebM, AAC/MP4). */
+    private fun cachedFile(id: Long, base64: String, mime: String?): File? = files.getOrPut(id) {
+        val f = File(cacheDir, "play_$id.${extFor(mime)}")
         runCatching { f.writeBytes(Base64.decode(base64, Base64.DEFAULT)) }.getOrElse { return null }
         f
     }.let { if (it.exists()) it else null }
+
+    private fun extFor(mime: String?): String = when {
+        mime == null -> "ogg"
+        mime.contains("ogg") -> "ogg"
+        mime.contains("webm") -> "webm"
+        mime.contains("mp4") || mime.contains("aac") || mime.contains("m4a") -> "m4a"
+        mime.contains("mpeg") -> "mp3"
+        else -> "ogg"
+    }
 
     private fun startTicker(mp: MediaPlayer) {
         ticker?.cancel()

@@ -22,7 +22,7 @@ object WalkieColors {
     val Surface = Color(0xFFFFFFFF)
     val Glass = Color(0xB3FFFFFF)          // frosted white bars/headers
     val BubbleMine = Color(0xFFFFFFFF)     // solid white
-    val BubbleTheirs = Color(0xADFFFFFF)   // frosted white
+    val BubbleTheirs = Color(0xFFEFF1F8)   // opaque soft lavender-white (no blur on Android)
     val TextPrimary = Color(0xFF1B1B22)
     val TextMuted = Color(0xFF6D7B84)
     val Danger = Color(0xFFE5484D)

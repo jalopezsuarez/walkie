@@ -60,8 +60,11 @@ Todo pasa por `core/network/WalkieApi.kt`, fiel al backend PHP:
 **Tiempo real:** long-polling (`?wait=1`), igual que la web — sin WebSockets.
 Con la app abierta, los mensajes llegan casi al instante.
 
-**Audio:** se graba en **OGG/Opus** (el mismo códec del navegador), así la web
-reproduce las notas sin transcodificar, y viceversa.
+**Audio:** se graba en **AAC/M4A** (contenedor MP4). AAC se reproduce de forma
+fiable en todos los `MediaPlayer` de Android (Opus/OGG falla en varios OEM) y en
+cualquier navegador, así que la web reproduce las notas sin transcodificar. Al
+reproducir, el audio recibido se cachea a archivo con su extensión real
+(según el `mime`) para que el extractor elija el demuxer correcto.
 
 **Reto anti-bot de InfinityFree.** El hosting protege el sitio con un desafío
 JavaScript (AES/`__test` cookie) que bloquea a los clientes que no son
