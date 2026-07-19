@@ -1,0 +1,122 @@
+name: Build Android APK
+
+# Builds a Trusted Web Activity (TWA) wrapper around the Walkie PWA with
+# Bubblewrap and publishes the signed APK to a GitHub Release. The heavy
+# lifting (JDK + Android SDK) runs on GitHub's runners, which have full
+# network access.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version name (e.g. 1.0.0)"
+        required: false
+        default: "1.0.0"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli@1.21.0
+
+      - name: Point Bubblewrap at the CI JDK and Android SDK
+        run: |
+          mkdir -p "$HOME/.bubblewrap"
+          printf '{\n  "jdkPath": "%s",\n  "androidSdkPath": "%s"\n}\n' "$JAVA_HOME" "$ANDROID_HOME" > "$HOME/.bubblewrap/config.json"
+          cat "$HOME/.bubblewrap/config.json"
+
+      - name: Build TWA APK
+        id: build
+        env:
+          VERSION_NAME: ${{ github.event.inputs.version || '1.0.0' }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euxo pipefail
+          WORK="$GITHUB_WORKSPACE/twa"
+          mkdir -p "$WORK"
+          cp "$GITHUB_WORKSPACE/android/twa-manifest.json" "$WORK/twa-manifest.json"
+
+          # Stamp version name/code from the CI run.
+          node -e '
+            const fs = require("fs");
+            const p = process.env.WORK + "/twa-manifest.json";
+            const m = JSON.parse(fs.readFileSync(p, "utf8"));
+            m.appVersionName = process.env.VERSION_NAME;
+            m.appVersionCode = parseInt(process.env.RUN_NUMBER, 10);
+            fs.writeFileSync(p, JSON.stringify(m, null, 2));
+          '
+          cd "$WORK"
+
+          # Ephemeral signing key (no secrets to manage). NOTE: because the key
+          # changes each build, updating the app on a device needs uninstall +
+          # reinstall. Swap for a fixed keystore secret for clean updates.
+          export BUBBLEWRAP_KEYSTORE_PASSWORD="$(openssl rand -hex 16)"
+          export BUBBLEWRAP_KEY_PASSWORD="$BUBBLEWRAP_KEYSTORE_PASSWORD"
+          keytool -genkeypair -v \
+            -keystore ./android.keystore -alias walkie \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$BUBBLEWRAP_KEYSTORE_PASSWORD" \
+            -keypass "$BUBBLEWRAP_KEY_PASSWORD" \
+            -dname "CN=Walkie, OU=Walkie, O=Walkie, L=, ST=, C=ES"
+
+          # Generate the Android project from twa-manifest.json, then build.
+          # `update` (re)generates the gradle project; fall back to `init`.
+          bubblewrap update --skipPwaValidation \
+            || bubblewrap init --manifest ./twa-manifest.json --directory . --skipPwaValidation
+          bubblewrap build --skipPwaValidation
+
+          APK="$(ls -1 app-release-signed.apk 2>/dev/null || ls -1 ./*.apk | head -n1)"
+          echo "Built: $APK"
+          cp "$APK" "$GITHUB_WORKSPACE/walkie-${VERSION_NAME}.apk"
+          echo "apk_path=walkie-${VERSION_NAME}.apk" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: walkie-apk
+          path: ${{ steps.build.outputs.apk_path }}
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.build.outputs.version }}-${{ github.run_number }}
+          name: Walkie ${{ steps.build.outputs.version }}
+          body: |
+            Android APK (TWA) de Walkie.
+
+            Instalación: descarga el `.apk`, ábrelo en el móvil y permite
+            "Instalar apps de orígenes desconocidos" si te lo pide.
+
+            Nota: build firmado con clave efímera; para actualizar, desinstala
+            la versión anterior antes de instalar la nueva.
+          files: ${{ steps.build.outputs.apk_path }}

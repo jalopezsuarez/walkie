@@ -1,0 +1,41 @@
+{
+  "packageId": "rocks.howto.walkie.twa",
+  "host": "walkie.howto.rocks",
+  "name": "Walkie",
+  "launcherName": "Walkie",
+  "display": "standalone",
+  "orientation": "default",
+  "themeColor": "#e2dcfb",
+  "themeColorDark": "#111111",
+  "navigationColor": "#e2dcfb",
+  "navigationColorDark": "#111111",
+  "navigationDividerColor": "#cfcbe6",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#e9eef2",
+  "enableNotifications": true,
+  "startUrl": "/web/",
+  "iconUrl": "https://walkie.howto.rocks/web/assets/icons/icon-512.png",
+  "maskableIconUrl": "https://walkie.howto.rocks/web/assets/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "walkie"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://walkie.howto.rocks/web/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://walkie.howto.rocks/web/",
+  "minSdkVersion": 21,
+  "fingerprints": [],
+  "additionalTrustedOrigins": []
+}
