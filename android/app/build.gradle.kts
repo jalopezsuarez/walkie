@@ -27,7 +27,7 @@ android {
 
     defaultConfig {
         applicationId = "rocks.howto.walkie"
-        minSdk = 30            // Android 11
+        minSdk = 29            // Android 10 — ~78% device reach, keeps OGG/Opus recording
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
