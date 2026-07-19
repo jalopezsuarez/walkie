@@ -54,8 +54,10 @@ El contrato autoritativo está en [`openapi.yaml`](openapi.yaml).
 |---|---|---|
 | GET | `/health` | Liveness |
 | POST | `/auth/request-code` | Enviar código de 6 dígitos por email |
-| POST | `/auth/verify` | Canjear código por token de sesión |
-| POST | `/auth/logout` | Invalidar la sesión |
+| POST | `/auth/verify` | Canjear código por token opaco (legacy) |
+| POST | `/auth/logout` | Invalidar la sesión (legacy) |
+| POST | `/oauth/token` | **OAuth2**: emitir access token (JWT) + refresh |
+| POST | `/oauth/revoke` | **OAuth2**: revocar un refresh token (RFC 7009) |
 | GET / PATCH | `/me` | Leer / actualizar perfil (nombre, email) |
 | POST | `/link/qr` | Emitir token de emparejamiento + QR (SVG) |
 | POST | `/link/claim` | Consumir un token escaneado → vincular dos usuarios |
@@ -67,12 +69,43 @@ El contrato autoritativo está en [`openapi.yaml`](openapi.yaml).
 | GET | `/links/{id}/statuses` | Estados de entrega/lectura |
 | POST | `/links/{id}/read` | Marcar como leídos |
 
-## Autenticación
+## Autenticación — OAuth 2.0 (oficial y estándar)
 
-Login **passwordless**: email → código de 6 dígitos (TTL 5 min, un solo uso,
-máx. 5 intentos) → **token Bearer** de sesión (RFC 6750). El backend guarda solo
-**hashes SHA-256** de códigos y tokens. El esquema de seguridad está declarado en
-`openapi.yaml` (`securitySchemes`).
+Login **passwordless**: email → código de 6 dígitos (TTL 5 min, un uso, máx. 5
+intentos). El código se canjea por tokens en el **endpoint de token OAuth 2.0**.
+
+- **`POST /oauth/token`** (RFC 6749 §3.2), body `application/x-www-form-urlencoded`:
+  - **Grant de extensión** `urn:walkie:params:oauth:grant-type:email-code`
+    (RFC 6749 §4.5) con `email` + `code` → emite tokens.
+  - **`grant_type=refresh_token`** (§6) para renovar. Los refresh tokens **rotan**
+    en cada uso.
+  - Respuesta estándar (§5.1): `access_token`, `token_type: Bearer`,
+    `expires_in`, `refresh_token`, `scope`. Errores (§5.2): `{ error,
+    error_description }` (`invalid_grant`, `unsupported_grant_type`…).
+- **Access token = JWT** (RFC 7519, HS256) autocontenido con `sub`, `exp`,
+  `scope`, `jti`. Se envía como **Bearer** (RFC 6750).
+- **`POST /oauth/revoke`** (RFC 7009) revoca un refresh token (p. ej. logout).
+- El backend guarda solo **hashes SHA-256** de códigos y refresh tokens; el JWT
+  se verifica por firma, sin lookup en BD.
+- **Compatibilidad:** `POST /auth/verify` sigue disponible (token opaco) para
+  clientes que aún no migraron; el *resource server* acepta ambos.
+
+Esquema declarado en [`openapi.yaml`](openapi.yaml) (`securitySchemes.bearerAuth`,
+`bearerFormat: JWT`) con los endpoints `/oauth/token` y `/oauth/revoke`
+documentados.
+
+Flujo (grant email-code):
+
+```bash
+curl -X POST /api/auth/request-code -H 'Content-Type: application/json' \
+     -d '{"email":"you@example.com"}'
+curl -X POST /api/oauth/token \
+     -d 'grant_type=urn:walkie:params:oauth:grant-type:email-code' \
+     --data-urlencode 'email=you@example.com' --data-urlencode 'code=123456'
+# → { "access_token":"<JWT>", "token_type":"Bearer", "expires_in":3600,
+#     "refresh_token":"…", "scope":"walkie" }
+curl /api/me -H "Authorization: Bearer <JWT>"
+```
 
 ## Seguridad
 

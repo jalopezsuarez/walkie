@@ -14,6 +14,7 @@ final class Request
     public readonly string $ip;
     public readonly string $userAgent;
     private ?array $json = null;
+    private ?array $form = null;
     private readonly string $rawBody;
 
     public function __construct()
@@ -65,6 +66,23 @@ final class Request
     {
         $body = $this->json();
         return $body[$key] ?? $default;
+    }
+
+    /**
+     * Read an application/x-www-form-urlencoded body parameter (OAuth 2.0 token
+     * and revocation endpoints require form encoding, RFC 6749 §4.5 / §3.2).
+     */
+    public function form(string $key, mixed $default = null): mixed
+    {
+        if ($this->form === null) {
+            if (!empty($_POST)) {
+                $this->form = $_POST;
+            } else {
+                parse_str($this->rawBody, $parsed);
+                $this->form = is_array($parsed) ? $parsed : [];
+            }
+        }
+        return $this->form[$key] ?? $default;
     }
 
     public function bearerToken(): ?string

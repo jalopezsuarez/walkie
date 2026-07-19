@@ -27,6 +27,8 @@ use Walkie\Features\Messages\ListMessages;
 use Walkie\Features\Messages\MarkRead;
 use Walkie\Features\Messages\MessageStatuses;
 use Walkie\Features\Messages\SendMessage;
+use Walkie\Features\OAuth\RevokeEndpoint;
+use Walkie\Features\OAuth\TokenEndpoint;
 use Walkie\Features\Pairing\ClaimPairing;
 use Walkie\Features\Pairing\CreatePairingQr;
 use Walkie\Features\Profile\GetProfile;
@@ -89,6 +91,10 @@ $router->get('/health', [GetHealth::class, 'handle']);
 $router->post('/auth/request-code', [RequestLoginCode::class, 'handle']);
 $router->post('/auth/verify',       [VerifyLoginCode::class, 'handle']);
 $router->post('/auth/logout',       [Logout::class, 'handle']);
+
+// OAuth 2.0 (RFC 6749/6750/7519/7009). request-code above emails the code.
+$router->post('/oauth/token',  [TokenEndpoint::class, 'handle']);
+$router->post('/oauth/revoke', [RevokeEndpoint::class, 'handle']);
 
 $router->get('/me',   [GetProfile::class, 'handle']);
 $router->patch('/me', [UpdateProfile::class, 'handle']);

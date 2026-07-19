@@ -134,3 +134,18 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     PRIMARY KEY (bucket),
     KEY idx_rate_window (window_start)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+--  OAuth 2.0 refresh tokens (RFC 6749 §1.5) — only SHA-256 hashes stored
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS oauth_refresh_tokens (
+    id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id       BIGINT UNSIGNED NOT NULL,
+    token_hash    CHAR(64)        NOT NULL,
+    created_at    DATETIME        NOT NULL,
+    expires_at    DATETIME        NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_oauth_refresh_hash (token_hash),
+    KEY idx_oauth_refresh_user (user_id),
+    KEY idx_oauth_refresh_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

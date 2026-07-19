@@ -17,7 +17,11 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: Session token returned by /auth/verify.
+      bearerFormat: JWT
+      description: >
+        OAuth 2.0 Bearer token (RFC 6750). Preferred: a JWT access token from
+        POST /oauth/token. Also accepts the opaque session token from the legacy
+        POST /auth/verify.
   schemas:
     Error:
       type: object
@@ -25,6 +29,15 @@ components:
         error: { type: string, example: rate_limited }
         message: { type: string }
         retry_after: { type: integer, nullable: true }
+    OAuthError:
+      type: object
+      description: OAuth 2.0 error response (RFC 6749 §5.2).
+      properties:
+        error:
+          type: string
+          enum: [invalid_request, invalid_grant, unsupported_grant_type, invalid_scope]
+          example: invalid_grant
+        error_description: { type: string }
     User:
       type: object
       properties:
@@ -125,6 +138,100 @@ paths:
       responses:
         '200': { description: Logged out }
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /oauth/token:
+    post:
+      summary: OAuth 2.0 token endpoint (RFC 6749 §3.2)
+      description: >
+        Issues Bearer access tokens (JWT) and refresh tokens. Body is
+        application/x-www-form-urlencoded. Two grants are supported:
+        the email-code extension grant (RFC 6749 §4.5) and refresh_token (§6).
+        Request the emailed code first via POST /auth/request-code.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [grant_type]
+              properties:
+                grant_type:
+                  type: string
+                  enum:
+                    - 'urn:walkie:params:oauth:grant-type:email-code'
+                    - refresh_token
+                email:
+                  type: string
+                  format: email
+                  description: Required for the email-code grant.
+                code:
+                  type: string
+                  pattern: '^\d{6}$'
+                  description: Required for the email-code grant.
+                refresh_token:
+                  type: string
+                  description: Required for the refresh_token grant.
+            examples:
+              emailCode:
+                summary: Email-code grant
+                value:
+                  grant_type: 'urn:walkie:params:oauth:grant-type:email-code'
+                  email: user@example.com
+                  code: '123456'
+              refresh:
+                summary: Refresh grant
+                value:
+                  grant_type: refresh_token
+                  refresh_token: 'PMak…'
+      responses:
+        '200':
+          description: Access + refresh token pair (RFC 6749 §5.1)
+          headers:
+            Cache-Control: { schema: { type: string, example: no-store } }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string, description: JWT (RFC 7519) }
+                  token_type: { type: string, example: Bearer }
+                  expires_in: { type: integer, example: 3600 }
+                  refresh_token: { type: string }
+                  scope: { type: string, example: walkie }
+        '400':
+          description: OAuth error (RFC 6749 §5.2)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OAuthError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /oauth/revoke:
+    post:
+      summary: OAuth 2.0 token revocation (RFC 7009)
+      description: >
+        Revokes a refresh token (e.g. on logout). Body is
+        application/x-www-form-urlencoded. Always returns 200, even for unknown
+        tokens, so validity is not leaked.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string, description: The refresh token to revoke. }
+      responses:
+        '200':
+          description: Revoked (or no-op)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
 
   /me:
     get:

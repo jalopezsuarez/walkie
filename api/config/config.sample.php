@@ -74,4 +74,11 @@ return [
         'max_text_len'   => 4000,          // characters
         'max_audio_bytes'=> 2 * 1024 * 1024, // 2 MB per voice note
     ],
+
+    // OAuth 2.0 token layer. Optional — sensible defaults apply if omitted.
+    'oauth' => [
+        'access_ttl'  => 60 * 60,            // access token (JWT) lifetime: 1 h
+        'refresh_ttl' => 60 * 60 * 24 * 30,  // refresh token lifetime: 30 days
+        'jwt_key'     => '',                 // HS256 key; empty = reuse app.key
+    ],
 ];

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Walkie\Shared;
 
+use Walkie\Features\Auth\UserAccount;
 use Walkie\Kernel\ApiException;
 use Walkie\Kernel\Config;
 use Walkie\Kernel\Database;
@@ -46,6 +47,20 @@ final class Session
         $token = $req->bearerToken();
         if ($token === null || $token === '') {
             throw ApiException::unauthorized();
+        }
+
+        // OAuth 2.0 access token (JWT, RFC 6750/7519). A JWT has exactly two
+        // dots; verify the signature and resolve the subject.
+        if (substr_count($token, '.') === 2) {
+            $uid = OAuthTokens::userFromAccess($token);
+            if ($uid !== null) {
+                $user = UserAccount::findById($uid);
+                if ($user !== null) {
+                    return $user;
+                }
+                throw ApiException::unauthorized('Session expired or invalid');
+            }
+            // Not a valid JWT — fall through to the legacy opaque-token path.
         }
 
         $pdo = Database::pdo();

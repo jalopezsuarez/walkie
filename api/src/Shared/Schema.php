@@ -17,6 +17,12 @@ final class Schema
 {
     public static function ensure(): void
     {
+        self::ensureDeliveredAt();
+        self::ensureOauthTable();
+    }
+
+    private static function ensureDeliveredAt(): void
+    {
         $marker = dirname(__DIR__, 2) . '/storage/.schema_delivered';
         if (is_file($marker)) {
             return;
@@ -37,6 +43,33 @@ final class Schema
                         ADD KEY idx_messages_delivered (delivered_at)"
                 );
             }
+            @file_put_contents($marker, gmdate('c') . "\n");
+        } catch (\Throwable $e) {
+            // No marker written → retried on the next request.
+        }
+    }
+
+    /** Create the OAuth refresh-token store on first request after deploy. */
+    private static function ensureOauthTable(): void
+    {
+        $marker = dirname(__DIR__, 2) . '/storage/.schema_oauth';
+        if (is_file($marker)) {
+            return;
+        }
+        try {
+            Database::pdo()->exec(
+                "CREATE TABLE IF NOT EXISTS oauth_refresh_tokens (
+                    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    user_id BIGINT UNSIGNED NOT NULL,
+                    token_hash CHAR(64) NOT NULL,
+                    created_at DATETIME NOT NULL,
+                    expires_at DATETIME NOT NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY uq_oauth_refresh_hash (token_hash),
+                    KEY idx_oauth_refresh_user (user_id),
+                    KEY idx_oauth_refresh_expires (expires_at)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+            );
             @file_put_contents($marker, gmdate('c') . "\n");
         } catch (\Throwable $e) {
             // No marker written → retried on the next request.
