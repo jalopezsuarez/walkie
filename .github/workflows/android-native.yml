@@ -1,4 +1,5 @@
 name: Build Android APK (native)
+# re-run trigger: secret-verify-2
 
 # Compiles the native Kotlin app in android/ and publishes a signed release
 # APK to a GitHub Release. Signs with the ANDROID_KEYSTORE_BASE64 repo secret
