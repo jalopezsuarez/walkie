@@ -105,40 +105,6 @@ paths:
         '200': { description: Code sent (always, to avoid user enumeration) }
         '429': { $ref: '#/components/responses/RateLimited' }
 
-  /auth/verify:
-    post:
-      summary: Exchange a login code for a session token
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [email, code]
-              properties:
-                email: { type: string, format: email }
-                code: { type: string, pattern: '^\d{6}$' }
-      responses:
-        '200':
-          description: Session created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token: { type: string }
-                  user: { $ref: '#/components/schemas/User' }
-        '400': { description: Invalid or expired code }
-        '429': { $ref: '#/components/responses/RateLimited' }
-
-  /auth/logout:
-    post:
-      summary: Invalidate the current session
-      responses:
-        '200': { description: Logged out }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-
   /oauth/token:
     post:
       summary: OAuth 2.0 token endpoint (RFC 6749 §3.2)

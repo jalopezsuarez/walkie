@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Walkie\Features\OAuth;
 
-use Walkie\Features\Auth\LoginCode;
 use Walkie\Kernel\ApiException;
 use Walkie\Kernel\Request;
 use Walkie\Kernel\Response;
 use Walkie\Kernel\Validator;
+use Walkie\Shared\LoginCode;
 use Walkie\Shared\OAuthTokens;
 use Walkie\Shared\RateLimiter;
 

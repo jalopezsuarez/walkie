@@ -1,5 +1,5 @@
 /* Walkie core — shared state, DOM helpers, icons, overlay & toast.
-   Feature slices (auth, contacts, chat, pairing, settings) attach to `W`. */
+   Feature slices (auth, contacts, conversation, pairing, settings) attach to `W`. */
 (function () {
     'use strict';
 
@@ -14,6 +14,7 @@
         lastMsgId: 0,
         poll: null,
         listPoll: null,
+        abortPoll: null,    // aborts the in-flight long-poll (set by conversation)
         pending: null       // recorded-but-unsent voice note
     };
 

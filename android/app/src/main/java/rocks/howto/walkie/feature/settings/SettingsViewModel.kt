@@ -28,7 +28,7 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             try {
                 val user = container.api.updateName(trimmed)
-                container.session.updateUser(user)
+                container.session.saveUser(user)
                 toast = "Guardado"
             } catch (e: Exception) {
                 toast = "No se pudo guardar"
@@ -40,8 +40,7 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
 
     fun logout(onSignedOut: () -> Unit) {
         viewModelScope.launch {
-            container.api.logout()
-            container.session.clear()
+            container.api.logout() // revokes the refresh token and clears the session
             onSignedOut()
         }
     }

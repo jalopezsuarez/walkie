@@ -1,16 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Walkie\Features\Auth;
+namespace Walkie\Shared;
 
 use Walkie\Kernel\ApiException;
 use Walkie\Kernel\Config;
 use Walkie\Kernel\Database;
-use Walkie\Shared\Crypto;
 
 /**
- * Verification of an emailed login code, shared by the legacy /auth/verify
- * endpoint and the OAuth 2.0 token endpoint's email-code grant.
+ * Verifies an emailed login code and resolves the user, for the OAuth 2.0
+ * token endpoint's email-code grant.
  */
 final class LoginCode
 {

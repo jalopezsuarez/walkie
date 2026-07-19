@@ -13,6 +13,8 @@
     var convGen = 0;         // bumped on every open / leave to stop the long-poll
     var pollCtl = null;      // AbortController for the in-flight long-poll
 
+    function newSet() { return (typeof Set !== 'undefined') ? new Set() : null; }
+
     function open(link) {
         W.stopTimers();
         stopCurrent();
@@ -27,9 +29,9 @@
         W.state.abortPoll = function () { convGen++; if (pollCtl) { try { pollCtl.abort(); } catch (e) {} pollCtl = null; } };
 
         checkEls = {};
-        rendered = (typeof Set !== 'undefined') ? new Set() : null;
-        pendingRead = (typeof Set !== 'undefined') ? new Set() : null;
-        readSent = (typeof Set !== 'undefined') ? new Set() : null;
+        rendered = newSet();
+        pendingRead = newSet();
+        readSent = newSet();
         if (readTimer) { clearTimeout(readTimer); readTimer = null; }
         if (seeObserver) { seeObserver.disconnect(); seeObserver = null; }
         if (typeof IntersectionObserver !== 'undefined') {
@@ -259,7 +261,7 @@
     function applyMessages(r, initial) {
         var box = document.getElementById('messages');
         if (!box) return;
-        if (initial) { W.clear(box); rendered = (typeof Set !== 'undefined') ? new Set() : null; }
+        if (initial) { W.clear(box); rendered = newSet(); }
 
         var appended = 0;
         (r.messages || []).forEach(function (m) {
@@ -456,5 +458,5 @@
         catch (e) { W.toast(W.errMsg(e)); }
     }
 
-    W.chat = { open: open };
+    W.conversation = { open: open };
 })();

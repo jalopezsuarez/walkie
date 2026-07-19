@@ -32,11 +32,13 @@ api/
 ├── src/
 │   ├── Kernel/             # HTTP: Config, Database, Router, Request, Response,
 │   │                       #   Validator, ApiException, Autoloader
-│   ├── Shared/             # infra transversal: Crypto, Session, RateLimiter,
-│   │                       #   SmtpClient, Mailer, QrCode, Cleanup, Schema
+│   ├── Shared/             # infra transversal: Crypto, Jwt, OAuthTokens, Session,
+│   │                       #   UserAccount, LoginCode, RateLimiter, SmtpClient,
+│   │                       #   Mailer, QrCode, Cleanup
 │   └── Features/           # un slice por carpeta, una clase por endpoint
 │       ├── Health/         #   GetHealth
-│       ├── Auth/           #   RequestLoginCode, VerifyLoginCode, Logout, UserAccount
+│       ├── Auth/           #   RequestLoginCode
+│       ├── OAuth/          #   TokenEndpoint, RevokeEndpoint
 │       ├── Profile/        #   GetProfile, UpdateProfile
 │       ├── Pairing/        #   CreatePairingQr, ClaimPairing
 │       ├── Contacts/       #   ListContacts, RemoveContact
@@ -54,9 +56,7 @@ El contrato autoritativo está en [`openapi.yaml`](openapi.yaml).
 |---|---|---|
 | GET | `/health` | Liveness |
 | POST | `/auth/request-code` | Enviar código de 6 dígitos por email |
-| POST | `/auth/verify` | Canjear código por token opaco (legacy) |
-| POST | `/auth/logout` | Invalidar la sesión (legacy) |
-| POST | `/oauth/token` | **OAuth2**: emitir access token (JWT) + refresh |
+| POST | `/oauth/token` | **OAuth2**: canjear el código (o refresh) por access token (JWT) + refresh |
 | POST | `/oauth/revoke` | **OAuth2**: revocar un refresh token (RFC 7009) |
 | GET / PATCH | `/me` | Leer / actualizar perfil (nombre, email) |
 | POST | `/link/qr` | Emitir token de emparejamiento + QR (SVG) |
@@ -86,9 +86,8 @@ intentos). El código se canjea por tokens en el **endpoint de token OAuth 2.0**
   `scope`, `jti`. Se envía como **Bearer** (RFC 6750).
 - **`POST /oauth/revoke`** (RFC 7009) revoca un refresh token (p. ej. logout).
 - El backend guarda solo **hashes SHA-256** de códigos y refresh tokens; el JWT
-  se verifica por firma, sin lookup en BD.
-- **Compatibilidad:** `POST /auth/verify` sigue disponible (token opaco) para
-  clientes que aún no migraron; el *resource server* acepta ambos.
+  se verifica por firma, sin *lookup* en BD y **sin estado de sesión** en el
+  servidor. Es la **única** vía de autenticación — no hay tokens legacy.
 
 Esquema declarado en [`openapi.yaml`](openapi.yaml) (`securitySchemes.bearerAuth`,
 `bearerFormat: JWT`) con los endpoints `/oauth/token` y `/oauth/revoke`

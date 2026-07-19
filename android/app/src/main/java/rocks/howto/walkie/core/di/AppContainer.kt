@@ -20,12 +20,12 @@ class AppContainer(context: Context) {
 
     val session = SessionStore(appContext).also { it.prime() }
 
-    private val http = buildOkHttp { session.cachedToken }
+    private val http = buildOkHttp { session.cachedAccess }
 
     val api = WalkieApi(
         baseUrl = BuildConfig.API_BASE,
         client = http,
-        onUnauthorized = { session.clearBlocking() },
+        session = session,
     )
 
     val audioRecorder = AudioRecorder(appContext)

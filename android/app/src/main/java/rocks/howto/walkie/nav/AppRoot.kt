@@ -42,7 +42,7 @@ inline fun <reified VM : ViewModel> screenViewModel(crossinline create: (AppCont
 @Composable
 fun AppRoot(initialLinkId: Long? = null) {
     val container = appContainer()
-    val signedIn by remember { mutableStateOf(container.session.cachedToken != null) }
+    val signedIn by remember { mutableStateOf(container.session.cachedAccess != null) }
 
     val stack = remember {
         mutableStateListOf<Screen>().apply {

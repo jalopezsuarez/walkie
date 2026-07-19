@@ -1,6 +1,5 @@
 package rocks.howto.walkie.core.designsystem
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
@@ -46,6 +45,5 @@ private val WalkieType = Typography(
 @Composable
 fun WalkieTheme(content: @Composable () -> Unit) {
     // The design is intentionally light-only to match the web app.
-    @Suppress("UNUSED_EXPRESSION") isSystemInDarkTheme()
     MaterialTheme(colorScheme = LightScheme, typography = WalkieType, content = content)
 }

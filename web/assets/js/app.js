@@ -30,7 +30,7 @@
                                 l.display_name,
                                 l.unread > 1 ? l.unread + ' mensajes nuevos' : 'Nuevo mensaje',
                                 'walkie-' + l.link_id,
-                                function () { W.chat.open(l); }
+                                function () { W.conversation.open(l); }
                             );
                         }
                     }

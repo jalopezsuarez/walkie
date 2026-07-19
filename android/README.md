@@ -21,7 +21,7 @@ app/src/main/java/rocks/howto/walkie/
 ├─ MainActivity.kt         · Host Compose + permiso de notificaciones
 ├─ core/
 │  ├─ network/             · WalkieApi (todos los endpoints), DTOs, OkHttp
-│  ├─ data/                · SessionStore (token/usuario en DataStore)
+│  ├─ data/                · SessionStore (tokens OAuth2 + usuario en DataStore)
 │  ├─ audio/               · AudioRecorder (OGG/Opus) + AudioPlayer
 │  ├─ designsystem/        · Tema, colores, componentes (Avatar, Checks…)
 │  └─ di/                  · AppContainer (un único grafo explícito)
@@ -46,7 +46,7 @@ Todo pasa por `core/network/WalkieApi.kt`, fiel al backend PHP:
 
 | Pantalla | Endpoints |
 |---|---|
-| Auth | `POST /auth/request-code`, `POST /auth/verify`, `POST /auth/logout` |
+| Auth (OAuth2) | `POST /auth/request-code`, `POST /oauth/token` (JWT + refresh), `POST /oauth/revoke` |
 | Ajustes | `GET /me`, `PATCH /me` |
 | Pairing | `POST /link/qr`, `POST /link/claim` |
 | Contactos | `GET /links`, `DELETE /links/{id}` |

@@ -17,17 +17,14 @@ class ContactsViewModel(private val container: AppContainer) : ViewModel() {
         private set
     var loading by mutableStateOf(true)
         private set
-    var error by mutableStateOf<String?>(null)
-        private set
 
     init {
         viewModelScope.launch {
             while (isActive) {
                 try {
                     contacts = container.api.links()
-                    error = null
                 } catch (e: Exception) {
-                    if (contacts.isEmpty()) error = "No se pudo cargar"
+                    // Keep the last good list; retry on the next tick.
                 } finally {
                     loading = false
                 }

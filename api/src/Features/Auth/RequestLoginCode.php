@@ -11,6 +11,7 @@ use Walkie\Kernel\Validator;
 use Walkie\Shared\Crypto;
 use Walkie\Shared\Mailer;
 use Walkie\Shared\RateLimiter;
+use Walkie\Shared\UserAccount;
 
 /**
  * POST /auth/request-code  { email }

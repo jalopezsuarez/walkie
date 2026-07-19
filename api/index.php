@@ -16,9 +16,7 @@ use Walkie\Kernel\Config;
 use Walkie\Kernel\Request;
 use Walkie\Kernel\Response;
 use Walkie\Kernel\Router;
-use Walkie\Features\Auth\Logout;
 use Walkie\Features\Auth\RequestLoginCode;
-use Walkie\Features\Auth\VerifyLoginCode;
 use Walkie\Features\Contacts\ListContacts;
 use Walkie\Features\Contacts\RemoveContact;
 use Walkie\Features\Health\GetHealth;
@@ -35,7 +33,6 @@ use Walkie\Features\Profile\GetProfile;
 use Walkie\Features\Profile\UpdateProfile;
 use Walkie\Shared\Cleanup;
 use Walkie\Shared\RateLimiter;
-use Walkie\Shared\Schema;
 
 require __DIR__ . '/src/Kernel/Autoloader.php';
 Autoloader::register(__DIR__ . '/src');
@@ -73,7 +70,6 @@ $request = new Request();
  * ------------------------------------------------------------------ */
 try {
     RateLimiter::enforce('api_per_ip', $request->ip);
-    Schema::ensure();
     Cleanup::maybeRun();
 } catch (ApiException $e) {
     sendError($e);
@@ -88,13 +84,11 @@ $router = new Router();
 
 $router->get('/health', [GetHealth::class, 'handle']);
 
+// Passwordless auth via OAuth 2.0 (RFC 6749/6750/7519/7009):
+// request-code emails a 6-digit code; /oauth/token exchanges it for tokens.
 $router->post('/auth/request-code', [RequestLoginCode::class, 'handle']);
-$router->post('/auth/verify',       [VerifyLoginCode::class, 'handle']);
-$router->post('/auth/logout',       [Logout::class, 'handle']);
-
-// OAuth 2.0 (RFC 6749/6750/7519/7009). request-code above emails the code.
-$router->post('/oauth/token',  [TokenEndpoint::class, 'handle']);
-$router->post('/oauth/revoke', [RevokeEndpoint::class, 'handle']);
+$router->post('/oauth/token',       [TokenEndpoint::class, 'handle']);
+$router->post('/oauth/revoke',      [RevokeEndpoint::class, 'handle']);
 
 $router->get('/me',   [GetProfile::class, 'handle']);
 $router->patch('/me', [UpdateProfile::class, 'handle']);

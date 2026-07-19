@@ -28,7 +28,6 @@ return [
         'key'         => 'CHANGE_ME_base64_32_bytes',
         // Random secret required by the one-shot api/install.php installer.
         'install_key' => 'CHANGE_ME_random',
-        'url'         => 'https://walkie.howto.rocks/api',
         'web_origin'  => 'https://walkie.howto.rocks',
         'debug'       => false,   // NEVER true in production
     ],

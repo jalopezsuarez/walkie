@@ -19,11 +19,16 @@ data class AuthResponse(val token: String, val user: User)
 data class MeResponse(val user: User)
 
 @Serializable
+data class TokenResponse(
+    @SerialName("access_token") val accessToken: String,
+    @SerialName("refresh_token") val refreshToken: String? = null,
+    @SerialName("expires_in") val expiresIn: Long = 0,
+)
+
+@Serializable
 data class QrResponse(
     val token: String,
     @SerialName("pair_url") val pairUrl: String,
-    @SerialName("qr_svg") val qrSvg: String = "",
-    @SerialName("expires_in") val expiresIn: Long = 0,
 )
 
 @Serializable
@@ -42,7 +47,6 @@ data class Contact(
     @SerialName("user_id") val userId: Long,
     @SerialName("display_name") val displayName: String,
     val unread: Int = 0,
-    @SerialName("created_at") val createdAt: String? = null,
 )
 
 @Serializable

@@ -45,9 +45,8 @@
                 if (!/^\d{6}$/.test(code)) { W.toast('Código de 6 dígitos'); return; }
                 verifyBtn.disabled = true; verifyBtn.textContent = 'Comprobando…';
                 try {
-                    var r = await Api.verify(email, code);
-                    Api.setToken(r.token); Api.setUser(r.user);
-                    W.state.user = r.user;
+                    var user = await Api.login(email, code);
+                    W.state.user = user;
                     W.contacts.go();
                 } catch (e) {
                     W.toast(W.errMsg(e));
@@ -75,7 +74,7 @@
     function logoutLocal() {
         W.stopTimers();
         if (W.notifier) W.notifier.stop();
-        Api.setToken(null); Api.setUser(null);
+        Api.clearSession();
         W.state.user = null; W.state.links = [];
         screen('email');
     }

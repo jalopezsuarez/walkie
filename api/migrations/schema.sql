@@ -41,25 +41,6 @@ CREATE TABLE IF NOT EXISTS login_codes (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
---  Sessions (opaque bearer tokens, only the hash is stored)
--- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS sessions (
-    id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    user_id     BIGINT UNSIGNED NOT NULL,
-    token_hash  CHAR(64)        NOT NULL,
-    ip          VARBINARY(16)   NULL,
-    user_agent  VARCHAR(255)    NULL,
-    created_at  DATETIME        NOT NULL,
-    last_seen   DATETIME        NOT NULL,
-    expires_at  DATETIME        NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uq_sessions_token (token_hash),
-    KEY idx_sessions_user (user_id),
-    KEY idx_sessions_expires (expires_at),
-    CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ---------------------------------------------------------------------
 --  Pairing tokens (the payload behind a QR code, 5 minute TTL)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pairing_tokens (

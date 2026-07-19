@@ -50,11 +50,10 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
         loading = true; error = null
         viewModelScope.launch {
             try {
-                val res = container.api.verify(email, code)
-                container.session.save(res.token, res.user)
+                container.api.login(email, code)
                 onAuthed()
             } catch (e: ApiException) {
-                error = if (e.code == "invalid_code") "Código incorrecto" else mapError(e)
+                error = if (e.code == "invalid_grant") "Código incorrecto" else mapError(e)
             } catch (e: Exception) {
                 error = "Sin conexión"
             } finally {

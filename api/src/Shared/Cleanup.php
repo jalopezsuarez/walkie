@@ -25,9 +25,9 @@ final class Cleanup
         $pdo->exec('DELETE FROM messages WHERE expires_at <= UTC_TIMESTAMP()');
 
         // Expired auth artefacts.
-        $pdo->exec('DELETE FROM login_codes   WHERE expires_at <= UTC_TIMESTAMP()');
-        $pdo->exec('DELETE FROM pairing_tokens WHERE expires_at <= UTC_TIMESTAMP()');
-        $pdo->exec('DELETE FROM sessions       WHERE expires_at <= UTC_TIMESTAMP()');
+        $pdo->exec('DELETE FROM login_codes          WHERE expires_at <= UTC_TIMESTAMP()');
+        $pdo->exec('DELETE FROM pairing_tokens       WHERE expires_at <= UTC_TIMESTAMP()');
+        $pdo->exec('DELETE FROM oauth_refresh_tokens WHERE expires_at <= UTC_TIMESTAMP()');
 
         RateLimiter::purgeOld();
     }

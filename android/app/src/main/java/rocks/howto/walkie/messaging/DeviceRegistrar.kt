@@ -21,7 +21,7 @@ class DeviceRegistrar(
 
     /** Fetch the current token and register it (call after sign-in / on start). */
     fun syncToken() {
-        if (session.cachedToken == null) return
+        if (session.cachedAccess == null) return
         // Guard: without google-services.json Firebase isn't initialized and
         // getInstance() throws — the app must still run in that dev state.
         runCatching {
@@ -32,7 +32,7 @@ class DeviceRegistrar(
     }
 
     fun onNewToken(token: String) {
-        if (session.cachedToken == null) return
+        if (session.cachedAccess == null) return
         scope.launch { api.registerDevice(token) }
     }
 }

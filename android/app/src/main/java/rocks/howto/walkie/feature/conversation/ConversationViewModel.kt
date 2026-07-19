@@ -85,14 +85,12 @@ class ConversationViewModel(
 
     private fun merge(incoming: List<Message>) {
         if (incoming.isEmpty()) return
-        val fresh = incoming.filter { ids.add(it.id) }
-        if (fresh.isNotEmpty()) {
-            messages = (messages + fresh).sortedBy { it.id }
-            lastId = messages.last().id
-        }
-        // Update delivered/read on already-known messages too.
         val byId = incoming.associateBy { it.id }
-        messages = messages.map { m -> byId[m.id]?.let { m.copy(delivered = it.delivered, read = it.read) } ?: m }
+        val fresh = incoming.filter { ids.add(it.id) }
+        val base = if (fresh.isNotEmpty()) (messages + fresh).sortedBy { it.id } else messages
+        // Single state write: append new + refresh delivered/read on known ones.
+        messages = base.map { m -> byId[m.id]?.let { m.copy(delivered = it.delivered, read = it.read) } ?: m }
+        if (fresh.isNotEmpty()) lastId = messages.last().id
         markIncomingRead(incoming)
     }
 

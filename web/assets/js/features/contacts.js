@@ -51,7 +51,7 @@
         var ul = el('ul', { class: 'list' });
         W.state.links.forEach(function (lk) {
             var pending = lk.unread > 0;
-            ul.appendChild(el('li', { class: 'contact' + (pending ? ' has-unread' : ''), onclick: function () { W.chat.open(lk); } }, [
+            ul.appendChild(el('li', { class: 'contact' + (pending ? ' has-unread' : ''), onclick: function () { W.conversation.open(lk); } }, [
                 el('span', { class: 'avatar', text: W.initials(lk.display_name) }),
                 el('div', { class: 'meta' }, [
                     el('div', { class: 'name', text: lk.display_name }),

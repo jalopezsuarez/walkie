@@ -11,16 +11,16 @@ declare(strict_types=1);
  * quiet periods.
  */
 
-use Walkie\Core\Autoloader;
-use Walkie\Core\Config;
-use Walkie\Services\Cleanup;
+use Walkie\Kernel\Autoloader;
+use Walkie\Kernel\Config;
+use Walkie\Shared\Cleanup;
 
 if (PHP_SAPI !== 'cli' && !isset($_GET['__cron_key'])) {
     http_response_code(403);
     exit("CLI only\n");
 }
 
-require __DIR__ . '/../src/Core/Autoloader.php';
+require __DIR__ . '/../src/Kernel/Autoloader.php';
 Autoloader::register(__DIR__ . '/../src');
 Config::load(__DIR__ . '/../config/config.php');
 

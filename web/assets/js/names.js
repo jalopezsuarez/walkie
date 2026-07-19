@@ -33,8 +33,6 @@
     function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
     window.WalkieNames = {
-        animals: ANIMALS,
-        adjectives: ADJECTIVES,
         random: function () { return pick(ANIMALS) + pick(ADJECTIVES); }
     };
 })();
