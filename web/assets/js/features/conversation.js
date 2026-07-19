@@ -377,20 +377,41 @@
         return new Blob([bytes], { type: mime });
     }
 
+    /* Cache-first audio: decode each voice note into a blob URL once, keyed by
+       message id, and reuse it on replays or when the chat is re-opened. The
+       blob is fully local, so playback never depends on the network — no cuts. */
+    var audioUrlCache = {};
+    var audioUrlOrder = [];
+    var AUDIO_CACHE_MAX = 60;
+
+    function audioUrl(m) {
+        var id = m.id;
+        if (audioUrlCache[id]) return audioUrlCache[id];
+        var url;
+        try { url = URL.createObjectURL(b64ToBlob(m.audio, m.mime || 'audio/webm')); }
+        catch (e) { url = 'data:' + (m.mime || 'audio/webm') + ';base64,' + m.audio; }
+        audioUrlCache[id] = url;
+        audioUrlOrder.push(id);
+        if (audioUrlOrder.length > AUDIO_CACHE_MAX) {
+            // Drop the oldest from the map but keep its object URL alive for any
+            // element still using it; the browser reclaims it on page unload.
+            delete audioUrlCache[audioUrlOrder.shift()];
+        }
+        return url;
+    }
+
     function fmtDur(ms) {
         var s = Math.max(0, Math.round((ms || 0) / 1000));
         return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
     }
 
     function buildAudio(node, m) {
-        // A blob URL plays far more reliably than a big data: URL (the first
-        // tap was silent on mobile with data: URLs).
-        var src;
-        try { src = URL.createObjectURL(b64ToBlob(m.audio, m.mime || 'audio/webm')); }
-        catch (e) { src = 'data:' + (m.mime || 'audio/webm') + ';base64,' + m.audio; }
-        var audio = new Audio(src);
+        // Cache-first blob URL: prepared once per message, reused on replay /
+        // re-open. A blob plays far more reliably than a big data: URL (the
+        // first tap was silent on mobile with data: URLs).
+        var audio = new Audio(audioUrl(m));
         audio.preload = 'auto';
-        try { audio.load(); } catch (e) {}   // decode ahead so the first tap plays instantly
+        try { audio.load(); } catch (e) {}   // decode ahead so the first tap plays instantly, gap-free
         var btn = el('button', { class: 'audio-play', html: W.ICON.play });
         var fill = el('div', { class: 'audio-fill' });
         var dur = el('span', { class: 'audio-dur', text: fmtDur(m.duration_ms) });
