@@ -59,6 +59,7 @@
     function stopTimers() {
         if (state.poll) { clearInterval(state.poll); state.poll = null; }
         if (state.listPoll) { clearInterval(state.listPoll); state.listPoll = null; }
+        if (state.abortPoll) { try { state.abortPoll(); } catch (e) {} state.abortPoll = null; }
     }
 
     /* Overlay management (full-screen QR / dialogs) */

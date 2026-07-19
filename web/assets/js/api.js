@@ -16,7 +16,7 @@
     }
     ApiError.prototype = Object.create(Error.prototype);
 
-    async function request(method, path, body) {
+    async function request(method, path, body, extra) {
         var headers = { 'Accept': 'application/json' };
         var token = getToken();
         if (token) headers['Authorization'] = 'Bearer ' + token;
@@ -25,11 +25,13 @@
             headers['Content-Type'] = 'application/json';
             opts.body = JSON.stringify(body);
         }
+        if (extra && extra.signal) opts.signal = extra.signal;
 
         var res;
         try {
             res = await fetch(BASE + path, opts);
         } catch (e) {
+            if (e && e.name === 'AbortError') throw new ApiError(-1, 'aborted', 'Aborted');
             throw new ApiError(0, 'network', 'No connection');
         }
 
@@ -67,8 +69,11 @@
         links: function () { return request('GET', '/links'); },
         unlink: function (linkId) { return request('DELETE', '/links/' + linkId); },
 
-        messages: function (linkId, after) {
-            return request('GET', '/links/' + linkId + '/messages' + (after ? '?after=' + after : ''));
+        messages: function (linkId, after, opts) {
+            var q = [];
+            if (after) q.push('after=' + after);
+            if (opts && opts.wait) q.push('wait=1');
+            return request('GET', '/links/' + linkId + '/messages' + (q.length ? '?' + q.join('&') : ''), undefined, opts);
         },
         sendText: function (linkId, text) {
             return request('POST', '/links/' + linkId + '/messages', { type: 'text', text: text });

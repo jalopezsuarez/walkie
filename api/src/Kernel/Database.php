@@ -36,6 +36,9 @@ final class Database
 
         // Always work in UTC so retention math is unambiguous.
         self::$pdo->exec("SET time_zone = '+00:00'");
+        // READ COMMITTED so a long-polling request keeps seeing new commits
+        // from other connections (REPEATABLE READ would pin a stale snapshot).
+        self::$pdo->exec("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED");
 
         return self::$pdo;
     }

@@ -5,10 +5,13 @@
 
     // Read/delivery tracking (per open conversation).
     var checkEls = {};       // message id -> checks <span>
+    var rendered = null;     // Set of already-rendered message ids (dedup)
     var pendingRead = null;  // Set of ids seen/played, not yet flushed
     var readSent = null;     // Set of ids already reported read
     var readTimer = null;
     var seeObserver = null;  // IntersectionObserver for incoming text
+    var convGen = 0;         // bumped on every open / leave to stop the long-poll
+    var pollCtl = null;      // AbortController for the in-flight long-poll
 
     function open(link) {
         W.stopTimers();
@@ -17,7 +20,14 @@
         W.state.lastMsgId = 0;
         W.state.pending = null;
 
+        convGen++;
+        var gen = convGen;
+        if (pollCtl) { try { pollCtl.abort(); } catch (e) {} pollCtl = null; }
+        // Any navigation calls W.stopTimers → abort the long-poll too.
+        W.state.abortPoll = function () { convGen++; if (pollCtl) { try { pollCtl.abort(); } catch (e) {} pollCtl = null; } };
+
         checkEls = {};
+        rendered = (typeof Set !== 'undefined') ? new Set() : null;
         pendingRead = (typeof Set !== 'undefined') ? new Set() : null;
         readSent = (typeof Set !== 'undefined') ? new Set() : null;
         if (readTimer) { clearTimeout(readTimer); readTimer = null; }
@@ -45,7 +55,27 @@
         W.mount(el('div', { class: 'screen chat' }, [top, msgs, composer(link)]));
 
         load(true);
-        W.state.poll = setInterval(function () { load(false); refreshStatuses(); }, 2500);
+        W.state.poll = setInterval(refreshStatuses, 3000);   // check-mark updates
+        longPoll(gen);                                        // near-instant new messages
+    }
+
+    // Hold a request open until a new message arrives (or a safe timeout),
+    // then immediately re-issue — near real-time without WebSockets.
+    async function longPoll(gen) {
+        while (gen === convGen && W.state.current) {
+            pollCtl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            try {
+                var r = await Api.messages(W.state.current.link_id, W.state.lastMsgId,
+                    { wait: true, signal: pollCtl ? pollCtl.signal : undefined });
+                if (gen !== convGen) return;
+                applyMessages(r, false);
+            } catch (e) {
+                if (gen !== convGen || (e && e.code === 'aborted')) return;
+                if (e && e.status === 401) { W.auth.logoutLocal(); return; }
+                if (e && e.status === 404) { W.toast('Conversación eliminada'); W.contacts.go(); return; }
+                await new Promise(function (res) { setTimeout(res, 2000); }); // back off, then retry
+            }
+        }
     }
 
     /* ---- delivery / read checks ---- */
@@ -217,29 +247,36 @@
         if (!W.state.current) return;
         try {
             var r = await Api.messages(W.state.current.link_id, W.state.lastMsgId);
-            var box = document.getElementById('messages');
-            if (!box) return;
-            if (initial) W.clear(box);
-
-            var incoming = r.messages || [];
-            if (incoming.length) {
-                var ph = box.querySelector('.empty');
-                if (ph) ph.remove();
-            }
-            incoming.forEach(function (m) {
-                if (m.id > W.state.lastMsgId) W.state.lastMsgId = m.id;
-                box.appendChild(bubble(m));
-            });
-            if (initial && !box.children.length) {
-                box.appendChild(el('div', { class: 'empty', style: 'flex:1' }, [
-                    el('div', { class: 'muted', text: 'Di algo 👋' })
-                ]));
-            }
-            if (incoming.length) box.scrollTop = box.scrollHeight;
+            applyMessages(r, initial);
         } catch (e) {
             if (e.status === 401) return W.auth.logoutLocal();
             if (e.status === 404) { W.toast('Conversación eliminada'); W.contacts.go(); }
         }
+    }
+
+    // Append new messages; dedup by id so the long-poll and an explicit load
+    // can't render the same message twice.
+    function applyMessages(r, initial) {
+        var box = document.getElementById('messages');
+        if (!box) return;
+        if (initial) { W.clear(box); rendered = (typeof Set !== 'undefined') ? new Set() : null; }
+
+        var appended = 0;
+        (r.messages || []).forEach(function (m) {
+            if (rendered && rendered.has(m.id)) return;
+            if (rendered) rendered.add(m.id);
+            if (m.id > W.state.lastMsgId) W.state.lastMsgId = m.id;
+            var ph = box.querySelector('.empty');
+            if (ph) ph.remove();
+            box.appendChild(bubble(m));
+            appended++;
+        });
+        if (initial && !box.children.length) {
+            box.appendChild(el('div', { class: 'empty', style: 'flex:1' }, [
+                el('div', { class: 'muted', text: 'Di algo 👋' })
+            ]));
+        }
+        if (appended) box.scrollTop = box.scrollHeight;
     }
 
     // Number of emoji if the text is emoji-only (whitespace ignored), else 0.
