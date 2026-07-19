@@ -1,0 +1,26 @@
+{
+  "//": "PLANTILLA. Sustituye por el google-services.json real de tu proyecto Firebase.",
+  "//instrucciones": "Firebase Console → tu proyecto → app Android (applicationId rocks.howto.walkie) → descargar google-services.json → guardar como android/app/google-services.json",
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "walkie-XXXXXX",
+    "storage_bucket": "walkie-XXXXXX.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": {
+          "package_name": "rocks.howto.walkie"
+        }
+      },
+      "api_key": [
+        { "current_key": "REEMPLAZA_CON_TU_API_KEY" }
+      ],
+      "services": {
+        "appinvite_service": { "other_platform_oauth_client": [] }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

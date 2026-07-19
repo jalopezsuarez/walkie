@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Walkie</string>
+    <string name="notif_channel_messages">walkie_messages</string>
+    <string name="notif_channel_messages_name">Mensajes</string>
+</resources>

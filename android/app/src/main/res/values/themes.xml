@@ -1,0 +1,10 @@
+<resources>
+    <!-- Base theme; the real UI colors live in Compose (designsystem/Theme.kt).
+         This just gives the app a light splash background before Compose loads. -->
+    <style name="Theme.Walkie" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#E2DCFB</item>
+        <item name="android:navigationBarColor">#E9EEF2</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/walkie_bg</item>
+    </style>
+</resources>

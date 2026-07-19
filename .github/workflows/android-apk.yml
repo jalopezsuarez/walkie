@@ -16,7 +16,7 @@ on:
     branches:
       - main
     paths:
-      - "android/**"
+      - ".github/twa/**"
       - ".github/workflows/android-apk.yml"
 
 permissions:
@@ -66,7 +66,7 @@ jobs:
           set -euxo pipefail
           WORK="$GITHUB_WORKSPACE/twa"
           mkdir -p "$WORK"
-          cp "$GITHUB_WORKSPACE/android/twa-manifest.json" "$WORK/twa-manifest.json"
+          cp "$GITHUB_WORKSPACE/.github/twa/twa-manifest.json" "$WORK/twa-manifest.json"
 
           # Stamp version name/code from the CI run.
           node -e '
